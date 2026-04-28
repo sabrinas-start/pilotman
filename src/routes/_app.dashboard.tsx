@@ -99,10 +99,12 @@ function DashboardPage() {
   const partAudio = sommeAV > 0 ? Math.min(resA / sommeAV, 1) : 0.5;
   const partVideo = sommeAV > 0 ? Math.min(resV / sommeAV, 1) : 0.5;
 
-  const minAudio = 0;
-  const maxAudio = Infinity;
-  const minVideo = 0;
-  const maxVideo = Infinity;
+  const minAudio = num(objectifs.plancher_audio);
+  const maxAudioRaw = num(objectifs.plafond_audio);
+  const maxAudio = maxAudioRaw > 0 ? maxAudioRaw : Infinity;
+  const minVideo = num(objectifs.plancher_video);
+  const maxVideoRaw = num(objectifs.plafond_video);
+  const maxVideo = maxVideoRaw > 0 ? maxVideoRaw : Infinity;
 
   const enveloppeAudio =
     resT > 0 ? Math.min(Math.max(resT * partAudio, minAudio), maxAudio) : minAudio;
