@@ -230,7 +230,7 @@ function DashboardPage() {
               <dl className="mt-6 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
                 <DetailLine label="Résultat pondéré" value={fmtEUR(resPondere)} />
                 <DetailLine
-                  label="Réserve de sécurité (20%)"
+                  label={`Réserve de sécurité (${(reserve * 100).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}%)`}
                   value={montantReserve > 0 ? `-${fmtEUR(montantReserve)}` : fmtEUR(0)}
                 />
                 <DetailLine
