@@ -370,8 +370,15 @@ function CalcRow({
         ? "var(--color-positive)"
         : "var(--color-destructive)";
   const labelColor = semantic === undefined ? "#888" : valueColor;
+  const isTotal = op === "=";
   return (
-    <div className={cn("grid grid-cols-[1.25rem_1fr_auto] items-center gap-3 py-1 text-sm", bold && "font-semibold")}>
+    <div
+      className={cn(
+        "grid grid-cols-[1.25rem_1fr_auto] items-center gap-3 px-2 py-1 text-sm rounded",
+        bold && "font-semibold",
+      )}
+      style={isTotal ? { backgroundColor: "rgba(255, 255, 255, 0.04)" } : undefined}
+    >
       <span style={{ color: "#555" }}>{op}</span>
       <span style={{ color: labelColor }}>{label}</span>
       <span className="tabular-nums" style={{ color: valueColor }}>{value}</span>
