@@ -349,3 +349,96 @@ function DetailLine({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function CalcRow({
+  op,
+  label,
+  value,
+  semantic,
+  bold,
+}: {
+  op: string;
+  label: string;
+  value: string;
+  semantic?: number;
+  bold?: boolean;
+}) {
+  const valueColor =
+    semantic === undefined
+      ? "#F0F0F0"
+      : semantic >= 0
+        ? "var(--color-positive)"
+        : "var(--color-destructive)";
+  const labelColor = semantic === undefined ? "#888" : valueColor;
+  return (
+    <div className={cn("grid grid-cols-[1.25rem_1fr_auto] items-center gap-3 py-1 text-sm", bold && "font-semibold")}>
+      <span style={{ color: "#555" }}>{op}</span>
+      <span style={{ color: labelColor }}>{label}</span>
+      <span className="tabular-nums" style={{ color: valueColor }}>{value}</span>
+    </div>
+  );
+}
+
+function CapaciteCard({
+  caTotal,
+  caObjectifYTD,
+  surplus,
+  pctAnneeEcoulee,
+  caPondere,
+  chargesYTD,
+  resPondere,
+  reserve,
+  montantReserve,
+  indicateur2,
+}: {
+  caTotal: number;
+  caObjectifYTD: number;
+  surplus: number;
+  pctAnneeEcoulee: number;
+  caPondere: number;
+  chargesYTD: number;
+  resPondere: number;
+  reserve: number;
+  montantReserve: number;
+  indicateur2: number;
+}) {
+  const surplusPondere = surplus * pctAnneeEcoulee;
+  const pctLabel = `${(pctAnneeEcoulee * 100).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}%`;
+  return (
+    <>
+      <h3 className="text-sm font-medium text-muted-foreground">
+        💡 Capacité d'investissement · Pôle Tournage
+      </h3>
+      <p className={cn("mt-2 text-4xl font-semibold", signClass(indicateur2))}>
+        {fmtEUR(indicateur2)}
+      </p>
+      <div className="mt-6 border-t" style={{ borderColor: "#2A2A2A" }} />
+      <div className="mt-4 space-y-0">
+        <CalcRow op="" label="CA réel YTD" value={fmtEUR(caTotal)} />
+        <CalcRow op="−" label="CA objectif YTD" value={`− ${fmtEUR(caObjectifYTD)}`} />
+        <CalcRow op="=" label="Surplus" value={fmtEUR(surplus)} />
+        <CalcRow op="×" label={`% année écoulée (${pctLabel})`} value={`× ${pctLabel}`} />
+        <CalcRow op="=" label="Surplus pondéré" value={fmtEUR(surplusPondere)} />
+        <CalcRow op="+" label="CA objectif YTD" value={`+ ${fmtEUR(caObjectifYTD)}`} />
+        <CalcRow op="=" label="CA pondéré" value={fmtEUR(caPondere)} />
+        <CalcRow op="−" label="Charges YTD (réel + prov.)" value={`− ${fmtEUR(chargesYTD)}`} />
+        <CalcRow op="=" label="Résultat pondéré" value={fmtEUR(resPondere)} semantic={resPondere} />
+        <CalcRow
+          op="−"
+          label={`Réserve sécurité (${(reserve * 100).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}%)`}
+          value={montantReserve > 0 ? `− ${fmtEUR(montantReserve)}` : fmtEUR(0)}
+        />
+      </div>
+      <div className="mt-3 border-t" style={{ borderColor: "#2A2A2A" }} />
+      <div className="mt-3">
+        <CalcRow
+          op="="
+          label="Capacité d'investissement"
+          value={fmtEUR(indicateur2)}
+          semantic={indicateur2}
+          bold
+        />
+      </div>
+    </>
+  );
+}
