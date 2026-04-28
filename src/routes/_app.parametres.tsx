@@ -310,6 +310,7 @@ function ParametresPage() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <SeasonGrid
                 title="Audio"
+                pole="audio"
                 values={saisonAudio}
                 initial={iSaisonAudio}
                 onChange={(i, v) =>
@@ -327,12 +328,14 @@ function ParametresPage() {
               />
               <SeasonGrid
                 title="Vidéo"
+                pole="video"
                 values={saisonVideo}
                 initial={iSaisonVideo}
                 onChange={(i, v) =>
                   setSaisonVideo((p) => p.map((x, idx) => (idx === i ? v : x)))
                 }
                 total={totalSaisonVideo}
+                onCopyFrom={() => setSaisonVideo([...saisonAudio])}
                 onSave={() => {
                   const payload: Record<string, unknown> = {};
                   saisonVideo.forEach((v, i) => {
@@ -346,7 +349,10 @@ function ParametresPage() {
           </Section>
 
           {/* Section 3 — Concrétisation pipe */}
-          <Section title="Taux de concrétisation pipe">
+          <Section
+            title="Taux de concrétisation pipe"
+            hint="Pondération appliquée aux projets en cours selon leur statut Rentman"
+          >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Field label="Option" suffix="%">
                 <Input
@@ -382,7 +388,10 @@ function ParametresPage() {
           </Section>
 
           {/* Section 5 — Garde-fous */}
-          <Section title="Garde-fous enveloppe (Indicateur 1)">
+          <Section
+            title="Garde-fous enveloppe (Indicateur 1)"
+            hint="Montants plancher et plafond de l'enveloppe courante par pôle"
+          >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Field label="Plancher Audio" suffix="€">
                 <Input
@@ -438,7 +447,10 @@ function ParametresPage() {
           </Section>
 
           {/* Section 6 — Réserve */}
-          <Section title="Réserve de sécurité (Indicateur 2)">
+          <Section
+            title="Réserve de sécurité (Indicateur 2)"
+            hint="Pourcentage déduit du résultat pondéré pour constituer une marge face aux imprévus"
+          >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Field label="Réserve de sécurité" suffix="%">
                 <Input
@@ -467,16 +479,25 @@ function ParametresPage() {
 function Section({
   title,
   note,
+  hint,
   children,
 }: {
   title: string;
   note?: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="rounded-lg border border-border bg-surface p-6">
       <div className="mb-4 flex items-baseline justify-between gap-4">
-        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <div>
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          {hint && (
+            <p className="mt-1" style={{ fontSize: "11px", color: "#666" }}>
+              {hint}
+            </p>
+          )}
+        </div>
         {note && <span className="text-xs text-muted-foreground">{note}</span>}
       </div>
       {children}
@@ -523,48 +544,106 @@ function SaveBar({ onSave }: { onSave: () => void }) {
   );
 }
 
+type PoleKind = "audio" | "video";
+
 function SeasonGrid({
   title,
+  pole,
   values,
   initial,
   onChange,
   total,
   onSave,
+  onCopyFrom,
 }: {
   title: string;
+  pole: PoleKind;
   values: string[];
   initial: string[];
   onChange: (i: number, v: string) => void;
   total: number;
   onSave: () => void;
+  onCopyFrom?: () => void;
 }) {
   const ok = Math.abs(total - 100) < 0.01;
+  const cardBg = pole === "audio" ? "var(--pole-audio-bg)" : "var(--pole-video-bg)";
+  const txt = pole === "audio" ? "var(--pole-audio-text)" : "var(--pole-video-text)";
+  const cellBg = pole === "audio" ? "var(--pole-audio-cell)" : "var(--pole-video-cell)";
+  const qBg = pole === "audio" ? "var(--pole-audio-quarter)" : "var(--pole-video-quarter)";
+  const qBorder =
+    pole === "audio" ? "var(--pole-audio-quarter-border)" : "var(--pole-video-quarter-border)";
+
+  const quarters = [0, 1, 2, 3].map((q) => {
+    const months = [q * 3, q * 3 + 1, q * 3 + 2];
+    const sum = months.reduce((s, i) => s + (parseFloat(values[i]) || 0), 0);
+    return { q, months, sum };
+  });
+
   return (
-    <div className="rounded-md border border-border bg-background/40 p-4">
-      <h4 className="mb-3 text-sm font-medium text-foreground">{title}</h4>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-        {values.map((v, i) => {
-          const isDirty = v !== (initial[i] ?? "");
-          return (
-            <label key={i} className="block">
-              <span className="mb-1 block text-[10px] uppercase tracking-wide text-muted-foreground">
-                {MOIS[i]}
-              </span>
-              <div className="relative">
-                <Input
-                  value={v}
-                  onChange={(e) => onChange(i, e.target.value)}
-                  type="number"
-                  className={cn("pr-6 text-sm", isDirty && dirtyClass)}
-                />
-                <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground">
-                  %
-                </span>
-              </div>
-            </label>
-          );
-        })}
+    <div
+      className="rounded-md border border-border p-4"
+      style={{ backgroundColor: cardBg }}
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h4 className="text-sm font-medium" style={{ color: txt }}>
+          {title}
+        </h4>
+        {onCopyFrom && (
+          <button
+            type="button"
+            onClick={onCopyFrom}
+            className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Copier Audio → Vidéo
+          </button>
+        )}
       </div>
+
+      <div className="space-y-2">
+        {quarters.map(({ q, months, sum }) => (
+          <div key={q} className="grid grid-cols-4 gap-2">
+            {months.map((i) => {
+              const v = values[i] ?? "";
+              const isDirty = v !== (initial[i] ?? "");
+              return (
+                <label key={i} className="block">
+                  <span className="mb-1 block text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {MOIS[i]}
+                  </span>
+                  <div className="relative">
+                    <Input
+                      value={v}
+                      onChange={(e) => onChange(i, e.target.value)}
+                      type="number"
+                      className={cn("pr-6 text-sm", isDirty && dirtyClass)}
+                      style={{ backgroundColor: cellBg }}
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground">
+                      %
+                    </span>
+                  </div>
+                </label>
+              );
+            })}
+            <div className="block">
+              <span className="mb-1 block text-[10px] uppercase tracking-wide" style={{ color: txt }}>
+                T{q + 1}
+              </span>
+              <div
+                className="flex h-9 items-center justify-end rounded-md border px-3 text-sm font-medium"
+                style={{
+                  backgroundColor: qBg,
+                  borderColor: qBorder,
+                  color: txt,
+                }}
+              >
+                {sum.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}%
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <p
         className={cn(
           "mt-3 text-sm",

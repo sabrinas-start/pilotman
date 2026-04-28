@@ -90,6 +90,19 @@
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.28 0 0);
   --sidebar-ring: oklch(0.83 0.14 90);
+
+  /* Pôle colors — Audio (slate) / Vidéo (indigo) */
+  --pole-audio-bg: rgba(148, 163, 184, 0.08);
+  --pole-audio-text: #94a3b8;
+  --pole-audio-cell: rgba(148, 163, 184, 0.09);
+  --pole-audio-quarter: rgba(148, 163, 184, 0.16);
+  --pole-audio-quarter-border: rgba(148, 163, 184, 0.25);
+
+  --pole-video-bg: rgba(129, 140, 248, 0.07);
+  --pole-video-text: #9da4e8;
+  --pole-video-cell: rgba(129, 140, 248, 0.08);
+  --pole-video-quarter: rgba(129, 140, 248, 0.15);
+  --pole-video-quarter-border: rgba(129, 140, 248, 0.22);
 }
 
 @layer base {
