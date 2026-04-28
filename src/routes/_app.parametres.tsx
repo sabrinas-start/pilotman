@@ -220,7 +220,7 @@ function ParametresPage() {
           {/* Section 1 — Objectifs annuels */}
           <Section title="Objectifs annuels">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Field label="CA objectif Audio" suffix="€">
+              <Field label="CA objectif Audio" suffix="€" pole="audio">
                 <Input
                   value={caAudio}
                   onChange={(e) => setCaAudio(e.target.value)}
@@ -228,7 +228,7 @@ function ParametresPage() {
                   className={cn(dirty.caAudio && dirtyClass)}
                 />
               </Field>
-              <Field label="CA objectif Vidéo" suffix="€">
+              <Field label="CA objectif Vidéo" suffix="€" pole="video">
                 <Input
                   value={caVideo}
                   onChange={(e) => setCaVideo(e.target.value)}
@@ -267,7 +267,7 @@ function ParametresPage() {
           {/* Section 4 — Dispatch sous-pôles (déplacé) */}
           <Section title="Dispatch sous-pôles">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Field label="Attribution Audio" suffix="%">
+              <Field label="Attribution Audio" suffix="%" pole="audio">
                 <Input
                   value={pctAudio}
                   onChange={(e) => setPctAudio(e.target.value)}
@@ -275,7 +275,7 @@ function ParametresPage() {
                   className={cn(dirty.pctAudio && dirtyClass)}
                 />
               </Field>
-              <Field label="Attribution Vidéo" suffix="%">
+              <Field label="Attribution Vidéo" suffix="%" pole="video">
                 <Input
                   value={pctVideo}
                   onChange={(e) => setPctVideo(e.target.value)}
@@ -393,7 +393,7 @@ function ParametresPage() {
             hint="Montants plancher et plafond de l'enveloppe courante par pôle"
           >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Field label="Plancher Audio" suffix="€">
+              <Field label="Plancher Audio" suffix="€" pole="audio">
                 <Input
                   value={minAudio}
                   onChange={(e) => setMinAudio(e.target.value)}
@@ -401,7 +401,7 @@ function ParametresPage() {
                   className={cn(dirty.minAudio && dirtyClass)}
                 />
               </Field>
-              <Field label="Plafond Audio" suffix="€">
+              <Field label="Plafond Audio" suffix="€" pole="audio">
                 <Input
                   value={maxAudio}
                   onChange={(e) => setMaxAudio(e.target.value)}
@@ -409,7 +409,7 @@ function ParametresPage() {
                   className={cn(dirty.maxAudio && dirtyClass)}
                 />
               </Field>
-              <Field label="Plancher Vidéo" suffix="€">
+              <Field label="Plancher Vidéo" suffix="€" pole="video">
                 <Input
                   value={minVideo}
                   onChange={(e) => setMinVideo(e.target.value)}
@@ -417,7 +417,7 @@ function ParametresPage() {
                   className={cn(dirty.minVideo && dirtyClass)}
                 />
               </Field>
-              <Field label="Plafond Vidéo" suffix="€">
+              <Field label="Plafond Vidéo" suffix="€" pole="video">
                 <Input
                   value={maxVideo}
                   onChange={(e) => setMaxVideo(e.target.value)}
@@ -509,20 +509,48 @@ function Field({
   label,
   suffix,
   children,
+  pole,
 }: {
   label: string;
   suffix?: string;
   children: React.ReactNode;
+  pole?: "audio" | "video";
 }) {
+  const labelColor =
+    pole === "audio"
+      ? "var(--pole-audio-text)"
+      : pole === "video"
+        ? "var(--pole-video-text)"
+        : undefined;
+  const wrapBg =
+    pole === "audio"
+      ? "var(--pole-audio-bg)"
+      : pole === "video"
+        ? "var(--pole-video-bg)"
+        : undefined;
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
+      <span
+        className={cn(
+          "mb-1.5 block text-xs uppercase tracking-wide",
+          !pole && "text-muted-foreground",
+        )}
+        style={labelColor ? { color: labelColor } : undefined}
+      >
         {label}
       </span>
-      <div className="relative">
+      <div
+        className={cn("relative", pole && "rounded-md p-1.5")}
+        style={wrapBg ? { backgroundColor: wrapBg } : undefined}
+      >
         {children}
         {suffix && (
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+          <span
+            className={cn(
+              "pointer-events-none absolute inset-y-0 flex items-center text-sm text-muted-foreground",
+              pole ? "right-4" : "right-3",
+            )}
+          >
             {suffix}
           </span>
         )}
