@@ -509,20 +509,48 @@ function Field({
   label,
   suffix,
   children,
+  pole,
 }: {
   label: string;
   suffix?: string;
   children: React.ReactNode;
+  pole?: "audio" | "video";
 }) {
+  const labelColor =
+    pole === "audio"
+      ? "var(--pole-audio-text)"
+      : pole === "video"
+        ? "var(--pole-video-text)"
+        : undefined;
+  const wrapBg =
+    pole === "audio"
+      ? "var(--pole-audio-bg)"
+      : pole === "video"
+        ? "var(--pole-video-bg)"
+        : undefined;
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
+      <span
+        className={cn(
+          "mb-1.5 block text-xs uppercase tracking-wide",
+          !pole && "text-muted-foreground",
+        )}
+        style={labelColor ? { color: labelColor } : undefined}
+      >
         {label}
       </span>
-      <div className="relative">
+      <div
+        className={cn("relative", pole && "rounded-md p-1.5")}
+        style={wrapBg ? { backgroundColor: wrapBg } : undefined}
+      >
         {children}
         {suffix && (
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+          <span
+            className={cn(
+              "pointer-events-none absolute inset-y-0 flex items-center text-sm text-muted-foreground",
+              pole ? "right-4" : "right-3",
+            )}
+          >
             {suffix}
           </span>
         )}
