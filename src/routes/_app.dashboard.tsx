@@ -127,7 +127,8 @@ function DashboardPage() {
   const chargesYTD = chargesReelTotal + chargesProvRestantes;
   const resPondere = caPondere - chargesYTD;
 
-  const reserve = 0.2;
+  const reserveRaw = num(objectifs.reserve_securite);
+  const reserve = reserveRaw > 0 ? reserveRaw : 0.2;
   const indicateur2 = resPondere > 0 ? resPondere * (1 - reserve) : resPondere;
   const montantReserve = resPondere > 0 ? resPondere * reserve : 0;
 
