@@ -254,6 +254,18 @@ function DashboardPage() {
   );
 }
 
+type Pole = "audio" | "video";
+
+const poleStyle = (p?: Pole) =>
+  p === "audio"
+    ? { backgroundColor: "var(--pole-audio-bg)", color: "var(--pole-audio-text)" }
+    : p === "video"
+    ? { backgroundColor: "var(--pole-video-bg)", color: "var(--pole-video-text)" }
+    : undefined;
+
+const poleTextColor = (p?: Pole) =>
+  p === "audio" ? "var(--pole-audio-text)" : p === "video" ? "var(--pole-video-text)" : undefined;
+
 function MetricCard({
   loading,
   title,
@@ -263,7 +275,7 @@ function MetricCard({
   loading: boolean;
   title: string;
   value: string;
-  lines: { label: string; value: string }[];
+  lines: { label: string; value: string; pole?: Pole }[];
 }) {
   return (
     <div className="rounded-lg border border-border bg-surface p-5">
@@ -277,10 +289,20 @@ function MetricCard({
             {lines.map((l) => (
               <li
                 key={l.label}
-                className="flex items-center justify-between text-sm text-muted-foreground"
+                className="flex items-center justify-between rounded px-2 py-1 text-sm"
+                style={
+                  l.pole
+                    ? poleStyle(l.pole)
+                    : { color: "var(--color-muted-foreground)" }
+                }
               >
                 <span>{l.label}</span>
-                <span className="font-medium text-foreground">{l.value}</span>
+                <span
+                  className="font-medium"
+                  style={l.pole ? { color: poleTextColor(l.pole) } : { color: "var(--color-foreground)" }}
+                >
+                  {l.value}
+                </span>
               </li>
             ))}
           </ul>
@@ -297,6 +319,7 @@ function EnvelopeCard({
   value,
   ca,
   charges,
+  pole,
 }: {
   loading: boolean;
   icon: string;
@@ -304,14 +327,18 @@ function EnvelopeCard({
   value: number;
   ca: number;
   charges: number;
+  pole: Pole;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-6">
+    <div
+      className="rounded-lg border border-border p-6"
+      style={{ backgroundColor: pole === "audio" ? "var(--pole-audio-bg)" : "var(--pole-video-bg)" }}
+    >
       {loading ? (
         <Skeleton className="h-32 w-full" />
       ) : (
         <>
-          <h3 className="text-sm font-medium text-muted-foreground">
+          <h3 className="text-sm font-medium" style={{ color: poleTextColor(pole) }}>
             {icon} {title}
           </h3>
           <p className={cn("mt-2 text-3xl font-semibold", signClass(value))}>
