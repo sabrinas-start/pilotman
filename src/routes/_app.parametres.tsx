@@ -447,7 +447,10 @@ function ParametresPage() {
           </Section>
 
           {/* Section 6 — Réserve */}
-          <Section title="Réserve de sécurité (Indicateur 2)">
+          <Section
+            title="Réserve de sécurité (Indicateur 2)"
+            hint="Pourcentage déduit du résultat pondéré pour constituer une marge face aux imprévus"
+          >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Field label="Réserve de sécurité" suffix="%">
                 <Input
