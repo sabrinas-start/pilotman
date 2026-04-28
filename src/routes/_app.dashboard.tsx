@@ -27,8 +27,7 @@ function signClass(n: number) {
 function DashboardPage() {
   const metriquesQ = useAirtable("tblNznOYtuFDUI3df", {
     maxRecords: 1,
-    // sort handled server-side would require extra params; rely on snapshot returned
-    filterByFormula: undefined,
+    sort: [{ field: "date_snapshot", direction: "desc" }],
   });
   const objectifsQ = useAirtable("tbllicBAAtlet98Mq", {
     filterByFormula: `{annee}=${ANNEE}`,
@@ -229,7 +228,7 @@ function DashboardPage() {
                 <DetailLine label="Résultat pondéré" value={fmtEUR(resPondere)} />
                 <DetailLine
                   label="Réserve de sécurité (20%)"
-                  value={`-${fmtEUR(montantReserve)}`}
+                  value={montantReserve > 0 ? `-${fmtEUR(montantReserve)}` : fmtEUR(0)}
                 />
                 <DetailLine
                   label="% année écoulée"
