@@ -169,8 +169,8 @@ function DashboardPage() {
           title="CA Réel YTD"
           value={fmtEUR(caTotal)}
           lines={[
-            { label: "Audio", value: fmtEUR(caAudio) },
-            { label: "Vidéo", value: fmtEUR(caVideo) },
+            { label: "Audio", value: fmtEUR(caAudio), pole: "audio" },
+            { label: "Vidéo", value: fmtEUR(caVideo), pole: "video" },
             { label: "Pôle", value: fmtEUR(caPole) },
           ]}
         />
@@ -179,8 +179,8 @@ function DashboardPage() {
           title="CA Pipe brut"
           value={fmtEUR(caPipeBrutTotal)}
           lines={[
-            { label: "Audio", value: fmtEUR(caPipeBrutAudio) },
-            { label: "Vidéo", value: fmtEUR(caPipeBrutVideo) },
+            { label: "Audio", value: fmtEUR(caPipeBrutAudio), pole: "audio" },
+            { label: "Vidéo", value: fmtEUR(caPipeBrutVideo), pole: "video" },
           ]}
         />
         <MetricCard
@@ -188,8 +188,8 @@ function DashboardPage() {
           title="Charges réelles YTD"
           value={fmtEUR(chargesReelTotal)}
           lines={[
-            { label: "Audio", value: fmtEUR(chargesAudioTotal) },
-            { label: "Vidéo", value: fmtEUR(chargesVideoTotal) },
+            { label: "Audio", value: fmtEUR(chargesAudioTotal), pole: "audio" },
+            { label: "Vidéo", value: fmtEUR(chargesVideoTotal), pole: "video" },
           ]}
         />
       </section>
@@ -203,6 +203,7 @@ function DashboardPage() {
           value={enveloppeAudio}
           ca={caAudio}
           charges={chargesAudioTotal}
+          pole="audio"
         />
         <EnvelopeCard
           loading={loading}
@@ -211,6 +212,7 @@ function DashboardPage() {
           value={enveloppeVideo}
           ca={caVideo}
           charges={chargesVideoTotal}
+          pole="video"
         />
       </section>
 
