@@ -388,7 +388,10 @@ function ParametresPage() {
           </Section>
 
           {/* Section 5 — Garde-fous */}
-          <Section title="Garde-fous enveloppe (Indicateur 1)">
+          <Section
+            title="Garde-fous enveloppe (Indicateur 1)"
+            hint="Montants plancher et plafond de l'enveloppe courante par pôle"
+          >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Field label="Plancher Audio" suffix="€">
                 <Input
