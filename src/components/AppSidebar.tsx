@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Settings, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Settings, ShieldCheck, FlaskConical } from "lucide-react";
 
 const items = [
   { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/simulateur", label: "Simulateur", icon: FlaskConical },
   { to: "/parametres", label: "Paramètres", icon: Settings },
   { to: "/droits", label: "Droits & profils", icon: ShieldCheck },
 ] as const;
