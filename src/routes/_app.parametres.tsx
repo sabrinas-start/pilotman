@@ -310,6 +310,7 @@ function ParametresPage() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <SeasonGrid
                 title="Audio"
+                pole="audio"
                 values={saisonAudio}
                 initial={iSaisonAudio}
                 onChange={(i, v) =>
@@ -327,12 +328,14 @@ function ParametresPage() {
               />
               <SeasonGrid
                 title="Vidéo"
+                pole="video"
                 values={saisonVideo}
                 initial={iSaisonVideo}
                 onChange={(i, v) =>
                   setSaisonVideo((p) => p.map((x, idx) => (idx === i ? v : x)))
                 }
                 total={totalSaisonVideo}
+                onCopyFrom={() => setSaisonVideo([...saisonAudio])}
                 onSave={() => {
                   const payload: Record<string, unknown> = {};
                   saisonVideo.forEach((v, i) => {
@@ -346,7 +349,10 @@ function ParametresPage() {
           </Section>
 
           {/* Section 3 — Concrétisation pipe */}
-          <Section title="Taux de concrétisation pipe">
+          <Section
+            title="Taux de concrétisation pipe"
+            hint="Pondération appliquée aux projets en cours selon leur statut Rentman"
+          >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Field label="Option" suffix="%">
                 <Input
