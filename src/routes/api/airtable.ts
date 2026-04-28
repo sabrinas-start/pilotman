@@ -85,6 +85,51 @@ export const Route = createFileRoute("/api/airtable")({
           );
         }
       },
+      PATCH: async ({ request }) => {
+        const token = process.env.AIRTABLE_TOKEN;
+        if (!token) {
+          return Response.json({ error: "AIRTABLE_TOKEN is not configured" }, { status: 500 });
+        }
+        let body: { tableId?: string; recordId?: string; fields?: Record<string, unknown> };
+        try {
+          body = (await request.json()) as typeof body;
+        } catch {
+          return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+        }
+        const { tableId, recordId, fields } = body;
+        if (!tableId || !recordId || !fields || typeof fields !== "object") {
+          return Response.json(
+            { error: "tableId, recordId and fields are required" },
+            { status: 400 },
+          );
+        }
+        try {
+          const apiUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${tableId}/${recordId}`;
+          const res = await fetch(apiUrl, {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ fields, typecast: true }),
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            return Response.json(
+              { error: `Airtable PATCH error: ${res.status}`, details: text },
+              { status: res.status },
+            );
+          }
+          const json = (await res.json()) as AirtableRecord;
+          return Response.json({ record: json });
+        } catch (err) {
+          console.error("Airtable PATCH failed:", err);
+          return Response.json(
+            { error: "Failed to update Airtable", details: String(err) },
+            { status: 500 },
+          );
+        }
+      },
     },
   },
 });
