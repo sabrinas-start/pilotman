@@ -267,7 +267,7 @@ function ParametresPage() {
           {/* Section 4 — Dispatch sous-pôles (déplacé) */}
           <Section title="Dispatch sous-pôles">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Field label="Attribution Audio" suffix="%">
+              <Field label="Attribution Audio" suffix="%" pole="audio">
                 <Input
                   value={pctAudio}
                   onChange={(e) => setPctAudio(e.target.value)}
@@ -275,7 +275,7 @@ function ParametresPage() {
                   className={cn(dirty.pctAudio && dirtyClass)}
                 />
               </Field>
-              <Field label="Attribution Vidéo" suffix="%">
+              <Field label="Attribution Vidéo" suffix="%" pole="video">
                 <Input
                   value={pctVideo}
                   onChange={(e) => setPctVideo(e.target.value)}
