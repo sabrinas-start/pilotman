@@ -393,7 +393,7 @@ function ParametresPage() {
             hint="Montants plancher et plafond de l'enveloppe courante par pôle"
           >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Field label="Plancher Audio" suffix="€">
+              <Field label="Plancher Audio" suffix="€" pole="audio">
                 <Input
                   value={minAudio}
                   onChange={(e) => setMinAudio(e.target.value)}
@@ -401,7 +401,7 @@ function ParametresPage() {
                   className={cn(dirty.minAudio && dirtyClass)}
                 />
               </Field>
-              <Field label="Plafond Audio" suffix="€">
+              <Field label="Plafond Audio" suffix="€" pole="audio">
                 <Input
                   value={maxAudio}
                   onChange={(e) => setMaxAudio(e.target.value)}
@@ -409,7 +409,7 @@ function ParametresPage() {
                   className={cn(dirty.maxAudio && dirtyClass)}
                 />
               </Field>
-              <Field label="Plancher Vidéo" suffix="€">
+              <Field label="Plancher Vidéo" suffix="€" pole="video">
                 <Input
                   value={minVideo}
                   onChange={(e) => setMinVideo(e.target.value)}
@@ -417,7 +417,7 @@ function ParametresPage() {
                   className={cn(dirty.minVideo && dirtyClass)}
                 />
               </Field>
-              <Field label="Plafond Vidéo" suffix="€">
+              <Field label="Plafond Vidéo" suffix="€" pole="video">
                 <Input
                   value={maxVideo}
                   onChange={(e) => setMaxVideo(e.target.value)}
