@@ -99,10 +99,12 @@ function DashboardPage() {
   const partAudio = sommeAV > 0 ? Math.min(resA / sommeAV, 1) : 0.5;
   const partVideo = sommeAV > 0 ? Math.min(resV / sommeAV, 1) : 0.5;
 
-  const minAudio = 0;
-  const maxAudio = Infinity;
-  const minVideo = 0;
-  const maxVideo = Infinity;
+  const minAudio = num(objectifs.plancher_audio);
+  const maxAudioRaw = num(objectifs.plafond_audio);
+  const maxAudio = maxAudioRaw > 0 ? maxAudioRaw : Infinity;
+  const minVideo = num(objectifs.plancher_video);
+  const maxVideoRaw = num(objectifs.plafond_video);
+  const maxVideo = maxVideoRaw > 0 ? maxVideoRaw : Infinity;
 
   const enveloppeAudio =
     resT > 0 ? Math.min(Math.max(resT * partAudio, minAudio), maxAudio) : minAudio;
@@ -125,7 +127,8 @@ function DashboardPage() {
   const chargesYTD = chargesReelTotal + chargesProvRestantes;
   const resPondere = caPondere - chargesYTD;
 
-  const reserve = 0.2;
+  const reserveRaw = num(objectifs.reserve_securite);
+  const reserve = reserveRaw > 0 ? reserveRaw : 0.2;
   const indicateur2 = resPondere > 0 ? resPondere * (1 - reserve) : resPondere;
   const montantReserve = resPondere > 0 ? resPondere * reserve : 0;
 
@@ -227,7 +230,7 @@ function DashboardPage() {
               <dl className="mt-6 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
                 <DetailLine label="Résultat pondéré" value={fmtEUR(resPondere)} />
                 <DetailLine
-                  label="Réserve de sécurité (20%)"
+                  label={`Réserve de sécurité (${(reserve * 100).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}%)`}
                   value={montantReserve > 0 ? `-${fmtEUR(montantReserve)}` : fmtEUR(0)}
                 />
                 <DetailLine
