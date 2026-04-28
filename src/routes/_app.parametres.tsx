@@ -220,7 +220,7 @@ function ParametresPage() {
           {/* Section 1 — Objectifs annuels */}
           <Section title="Objectifs annuels">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Field label="CA objectif Audio" suffix="€">
+              <Field label="CA objectif Audio" suffix="€" pole="audio">
                 <Input
                   value={caAudio}
                   onChange={(e) => setCaAudio(e.target.value)}
@@ -228,7 +228,7 @@ function ParametresPage() {
                   className={cn(dirty.caAudio && dirtyClass)}
                 />
               </Field>
-              <Field label="CA objectif Vidéo" suffix="€">
+              <Field label="CA objectif Vidéo" suffix="€" pole="video">
                 <Input
                   value={caVideo}
                   onChange={(e) => setCaVideo(e.target.value)}
