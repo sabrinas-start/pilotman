@@ -24,6 +24,17 @@ export const Route = createFileRoute("/api/airtable")({
         const maxRecords = maxRecordsParam ? parseInt(maxRecordsParam, 10) : undefined;
         const fields = url.searchParams.getAll("fields[]");
 
+        const sortParam = url.searchParams.get("sort");
+        let sort: { field: string; direction?: string }[] = [];
+        if (sortParam) {
+          try {
+            const parsed = JSON.parse(sortParam);
+            if (Array.isArray(parsed)) sort = parsed;
+          } catch {
+            return Response.json({ error: "Invalid sort param" }, { status: 400 });
+          }
+        }
+
         const allRecords: AirtableRecord[] = [];
         let offset: string | undefined = undefined;
 
@@ -36,6 +47,12 @@ export const Route = createFileRoute("/api/airtable")({
               apiUrl.searchParams.set("pageSize", String(Math.min(100, remaining)));
             }
             for (const f of fields) apiUrl.searchParams.append("fields[]", f);
+            sort.forEach((s, i) => {
+              if (s?.field) {
+                apiUrl.searchParams.set(`sort[${i}][field]`, s.field);
+                if (s.direction) apiUrl.searchParams.set(`sort[${i}][direction]`, s.direction);
+              }
+            });
             if (offset) apiUrl.searchParams.set("offset", offset);
 
             const res = await fetch(apiUrl.toString(), {

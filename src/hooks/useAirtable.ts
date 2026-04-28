@@ -6,10 +6,13 @@ export type AirtableRecord = {
   createdTime?: string;
 };
 
+export type UseAirtableSort = { field: string; direction?: "asc" | "desc" };
+
 export type UseAirtableOptions = {
   filterByFormula?: string;
   maxRecords?: number;
   fields?: string[];
+  sort?: UseAirtableSort[];
 };
 
 type CacheEntry = { records: AirtableRecord[] };
@@ -27,6 +30,7 @@ function buildUrl(tableId: string, options: UseAirtableOptions) {
   if (options.filterByFormula) params.set("filterByFormula", options.filterByFormula);
   if (options.maxRecords !== undefined) params.set("maxRecords", String(options.maxRecords));
   if (options.fields) for (const f of options.fields) params.append("fields[]", f);
+  if (options.sort && options.sort.length > 0) params.set("sort", JSON.stringify(options.sort));
   return `/api/airtable?${params.toString()}`;
 }
 
