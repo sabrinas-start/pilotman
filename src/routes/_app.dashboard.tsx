@@ -220,33 +220,20 @@ function DashboardPage() {
       <section>
         <div className="rounded-lg border border-border bg-surface p-6">
           {loading ? (
-            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-64 w-full" />
           ) : (
-            <>
-              <h3 className="text-sm font-medium text-muted-foreground">
-                💡 Capacité d'investissement · Pôle Tournage
-              </h3>
-              <p className={cn("mt-2 text-4xl font-semibold", signClass(indicateur2))}>
-                {fmtEUR(indicateur2)}
-              </p>
-              <dl className="mt-6 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-                <DetailLine label="Résultat pondéré" value={fmtEUR(resPondere)} />
-                <DetailLine
-                  label={`Réserve de sécurité (${(reserve * 100).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}%)`}
-                  value={montantReserve > 0 ? `-${fmtEUR(montantReserve)}` : fmtEUR(0)}
-                />
-                <DetailLine
-                  label="% année écoulée"
-                  value={`${(pctAnneeEcoulee * 100).toLocaleString("fr-FR", {
-                    maximumFractionDigits: 1,
-                  })} %`}
-                />
-                <DetailLine
-                  label="Charges YTD (réel + prov.)"
-                  value={fmtEUR(chargesYTD)}
-                />
-              </dl>
-            </>
+            <CapaciteCard
+              caTotal={caTotal}
+              caObjectifYTD={caObjectifYTD}
+              surplus={surplus}
+              pctAnneeEcoulee={pctAnneeEcoulee}
+              caPondere={caPondere}
+              chargesYTD={chargesYTD}
+              resPondere={resPondere}
+              reserve={reserve}
+              montantReserve={montantReserve}
+              indicateur2={indicateur2}
+            />
           )}
         </div>
       </section>
