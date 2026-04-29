@@ -454,11 +454,12 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
         const created = await airtablePost(SALARIES_TABLE, {
           nom_salarie: nom,
           type_contrat: "Gérant",
-          date_demarrage_charge: dateDem,
+          date_demarrage_charge: `${dateDem}-01`,
         });
         const records = gerantMois.map((m, i) => {
           const cte = parseFloat(m.cte) || 0;
-          const tx = parseFloat(m.taux) || 0;
+          const tx = parseFloat(m.taux) || 0; // entré en %
+          const txDec = tx / 100; // stocké en décimal
           return {
             fields: {
               cle_primaire: `${nom}_${i + 1}_${ANNEE}`,
@@ -467,8 +468,8 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
               mois: i + 1,
               cte_mensuel: cte,
               fonpeps_mensuel: 0,
-              taux_imputation: tx,
-              montant_impute: cte * (tx / 100),
+              taux_imputation: txDec,
+              montant_impute: cte * txDec,
             },
           };
         });
@@ -483,10 +484,10 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
         const fields: Record<string, unknown> = {
           nom_salarie: nom,
           type_contrat: contrat,
-          date_demarrage_charge: dateDem,
+          date_demarrage_charge: `${dateDem}-01`,
           cte_annuel: parseFloat(cteAnnuel) || 0,
           fonpeps_annuel: parseFloat(fonpepsAnnuel) || 0,
-          taux_imputation: parseFloat(taux) || 0,
+          taux_imputation: (parseFloat(taux) || 0) / 100,
         };
         if (isCDD && dateFin) fields.date_fin_charge = `${dateFin}-01`;
         const created = await airtablePost(SALARIES_TABLE, fields);
