@@ -63,13 +63,13 @@ type SalarieMois = {
 };
 
 const fmtEUR = (n: number) =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  `${n.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} €`;
 
 const num = (v: unknown): number => (typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) || 0 : 0);
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
 // taux_imputation est stocké en décimal (1 = 100%, 0.8 = 80%)
-const fmtPct = (decimal: number): string => `${(decimal * 100).toFixed(1)} %`;
+const fmtPct = (decimal: number): string => `${Math.round(decimal * 100)} %`;
 const fmtMonthYear = (date: string): string => {
   if (!date) return "—";
   const d = new Date(date);
@@ -141,12 +141,17 @@ function badgeForContrat(t: ContratType) {
   }
 }
 
+type SortKey = "nom" | "type_contrat" | "date_demarrage" | "date_fin" | "cte_annuel" | "taux_imputation";
+type SortDir = "asc" | "desc";
+
 function SalariesPage() {
   const salariesQ = useAirtable(SALARIES_TABLE, {});
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editSalarie, setEditSalarie] = useState<Salarie | null>(null);
   const [deleteSalarie, setDeleteSalarie] = useState<Salarie | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("nom");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const salaries: Salarie[] = useMemo(() => {
     if (!salariesQ.data) return [];
@@ -167,6 +172,37 @@ function SalariesPage() {
       .filter((s) => s.nom);
   }, [salariesQ.data]);
 
+  const sortedSalaries = useMemo(() => {
+    const arr = [...salaries];
+    arr.sort((a, b) => {
+      const va = a[sortKey];
+      const vb = b[sortKey];
+      let cmp = 0;
+      if (va == null && vb == null) cmp = 0;
+      else if (va == null) cmp = -1;
+      else if (vb == null) cmp = 1;
+      else if (typeof va === "number" && typeof vb === "number") cmp = va - vb;
+      else cmp = String(va).localeCompare(String(vb), "fr", { numeric: true });
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }, [salaries, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+  const sortIndicator = (key: SortKey) => sortKey === key ? (sortDir === "asc" ? " ▲" : " ▼") : "";
+
+  const SortableTh = ({ k, align, children }: { k: SortKey; align?: "right"; children: React.ReactNode }) => (
+    <th
+      className={cn("px-4 py-3 cursor-pointer select-none hover:text-foreground", align === "right" ? "text-right" : "text-left")}
+      onClick={() => toggleSort(k)}
+    >
+      {children}{sortIndicator(k)}
+    </th>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -183,12 +219,12 @@ function SalariesPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-4 py-3 text-left">Nom</th>
-              <th className="px-4 py-3 text-left">Contrat</th>
-              <th className="px-4 py-3 text-left">Date démarrage</th>
-              <th className="px-4 py-3 text-left">Date fin</th>
-              <th className="px-4 py-3 text-right">CTE annuel</th>
-              <th className="px-4 py-3 text-right">% imputation</th>
+              <SortableTh k="nom">Nom</SortableTh>
+              <SortableTh k="type_contrat">Contrat</SortableTh>
+              <SortableTh k="date_demarrage">Date démarrage</SortableTh>
+              <SortableTh k="date_fin">Date fin</SortableTh>
+              <SortableTh k="cte_annuel" align="right">CTE annuel</SortableTh>
+              <SortableTh k="taux_imputation" align="right">% imputation</SortableTh>
               <th className="px-4 py-3 w-10" />
             </tr>
           </thead>
@@ -207,7 +243,7 @@ function SalariesPage() {
                 </td>
               </tr>
             )}
-            {salaries.map((s) => {
+            {sortedSalaries.map((s) => {
               const isOpen = expanded === s.id;
               const badge = badgeForContrat(s.type_contrat);
               return (
@@ -471,7 +507,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
               cte_mensuel: cte,
               fonpeps_mensuel: 0,
               taux_imputation: txDec,
-              montant_impute: cte * txDec,
+              montant_impute: (cte - 0) * txDec,
             },
           };
         });
@@ -719,7 +755,7 @@ function EditGerantMoisModal({
     filterByFormula: `AND({nom_salarie}="${salarie.nom}", {annee}=${ANNEE})`,
     sort: [{ field: "mois", direction: "asc" }],
   });
-  const [rows, setRows] = useState<Array<{ id: string; mois: number; cte: string; taux: string }>>([]);
+  const [rows, setRows] = useState<Array<{ id: string; mois: number; cte: string; taux: string; fonpeps: number }>>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -732,6 +768,7 @@ function EditGerantMoisModal({
             mois: num(f.mois),
             cte: String(num(f.cte_mensuel)),
             taux: (num(f.taux_imputation) * 100).toFixed(1),
+            fonpeps: num(f.fonpeps_mensuel),
           };
         }),
       );
@@ -748,7 +785,7 @@ function EditGerantMoisModal({
         await airtablePatch(SALARIES_MOIS_TABLE, r.id, {
           cte_mensuel: cte,
           taux_imputation: txDec,
-          montant_impute: cte * txDec,
+          montant_impute: (cte - r.fonpeps) * txDec,
         });
       }
       // Recalcul cte_annuel à partir de la somme des cte_mensuel
@@ -911,9 +948,7 @@ function EditMoisModal({
   const txNum = parseFloat(taux) || 0; // entré en %
   const txDec = txNum / 100;
   const fonpeps = ligne.fonpeps_mensuel;
-  const montantImpute = isGerant
-    ? cteNum * txDec
-    : (cteNum - fonpeps) * txDec;
+  const montantImpute = (cteNum - fonpeps) * txDec;
 
   const submit = async () => {
     setLoading(true);
