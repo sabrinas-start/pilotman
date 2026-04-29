@@ -583,6 +583,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
                               setGerantMois(next);
                             }}
                             className="h-8"
+                            onWheel={blurOnWheel}
                           />
                         </td>
                         <td className="px-3 py-1.5">
