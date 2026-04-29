@@ -68,6 +68,18 @@ const fmtEUR = (n: number) =>
 const num = (v: unknown): number => (typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) || 0 : 0);
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
+// taux_imputation est stocké en décimal (1 = 100%, 0.8 = 80%)
+const fmtPct = (decimal: number): string => `${(decimal * 100).toFixed(1)} %`;
+const fmtMonthYear = (date: string): string => {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+};
+const blurOnWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+  (e.target as HTMLInputElement).blur();
+};
+
 async function airtablePost(tableId: string, fields: Record<string, unknown>) {
   const res = await fetch("/api/airtable", {
     method: "POST",
