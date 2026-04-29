@@ -633,7 +633,7 @@ function EditSalarieModal({
 
   const [cte, setCte] = useState(String(salarie.cte_annuel));
   const [fonpeps, setFonpeps] = useState(String(salarie.fonpeps_annuel));
-  const [taux, setTaux] = useState(String(salarie.taux_imputation));
+  const [taux, setTaux] = useState((salarie.taux_imputation * 100).toFixed(1));
   const [dateEffet, setDateEffet] = useState("");
   const [dateFin, setDateFin] = useState(salarie.date_fin ? salarie.date_fin.slice(0, 7) : "");
   const [loading, setLoading] = useState(false);
