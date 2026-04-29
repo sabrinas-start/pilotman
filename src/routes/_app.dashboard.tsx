@@ -123,7 +123,6 @@ function DashboardPage() {
   // CA
   const caAudio = num(metriques.ca_reel_audio);
   const caVideo = num(metriques.ca_reel_video);
-  const caPole = num(metriques.ca_reel_pole);
   const caTotal = num(metriques.ca_reel_total);
 
   // Indicateur 1 — enveloppes
