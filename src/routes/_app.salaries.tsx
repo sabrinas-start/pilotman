@@ -407,6 +407,8 @@ function ExpandedContent({
         <EditMoisModal
           ligne={editLine}
           isGerant={salarie.type_contrat === "Gérant"}
+          salarieId={salarie.id}
+          salarieNom={salarie.nom}
           onClose={() => setEditLine(null)}
           onDone={() => {
             setEditLine(null);
