@@ -729,7 +729,7 @@ function EditGerantMoisModal({
             id: r.id,
             mois: num(f.mois),
             cte: String(num(f.cte_mensuel)),
-            taux: String(num(f.taux_imputation)),
+            taux: (num(f.taux_imputation) * 100).toFixed(1),
           };
         }),
       );
