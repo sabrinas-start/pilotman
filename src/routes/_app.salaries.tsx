@@ -805,6 +805,7 @@ function EditGerantMoisModal({
                           setRows(next);
                         }}
                         className="h-8"
+                        onWheel={blurOnWheel}
                       />
                     </td>
                   </tr>
