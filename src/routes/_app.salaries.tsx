@@ -68,6 +68,18 @@ const fmtEUR = (n: number) =>
 const num = (v: unknown): number => (typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) || 0 : 0);
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
+// taux_imputation est stocké en décimal (1 = 100%, 0.8 = 80%)
+const fmtPct = (decimal: number): string => `${(decimal * 100).toFixed(1)} %`;
+const fmtMonthYear = (date: string): string => {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+};
+const blurOnWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+  (e.target as HTMLInputElement).blur();
+};
+
 async function airtablePost(tableId: string, fields: Record<string, unknown>) {
   const res = await fetch("/api/airtable", {
     method: "POST",
@@ -103,6 +115,19 @@ async function airtableDelete(tableId: string, recordId: string) {
   const res = await fetch(`/api/airtable?tableId=${tableId}&recordId=${recordId}`, { method: "DELETE" });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+// Recalcule cte_annuel d'un salarié à partir de toutes ses lignes mensuelles 2026
+async function recomputeCteAnnuel(salarieId: string, nomSalarie: string) {
+  const url = `/api/airtable?tableId=${SALARIES_MOIS_TABLE}&filterByFormula=${encodeURIComponent(
+    `AND({nom_salarie}="${nomSalarie}", {annee}=${ANNEE})`,
+  )}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(await res.text());
+  const json = (await res.json()) as { records: Array<{ fields: Record<string, unknown> }> };
+  const total = json.records.reduce((sum, r) => sum + num(r.fields.cte_mensuel), 0);
+  await airtablePatch(SALARIES_TABLE, salarieId, { cte_annuel: total });
+  return total;
 }
 
 function badgeForContrat(t: ContratType) {
@@ -267,10 +292,10 @@ function ExpandableRow({
             {badge.label}
           </span>
         </td>
-        <td className="px-4 py-3 text-muted-foreground">{salarie.date_demarrage || "—"}</td>
-        <td className="px-4 py-3 text-muted-foreground">{salarie.date_fin || "—"}</td>
+        <td className="px-4 py-3 text-muted-foreground">{fmtMonthYear(salarie.date_demarrage)}</td>
+        <td className="px-4 py-3 text-muted-foreground">{salarie.date_fin ? fmtMonthYear(salarie.date_fin) : "—"}</td>
         <td className="px-4 py-3 text-right tabular-nums">{fmtEUR(salarie.cte_annuel)}</td>
-        <td className="px-4 py-3 text-right tabular-nums">{salarie.taux_imputation}%</td>
+        <td className="px-4 py-3 text-right tabular-nums">{fmtPct(salarie.taux_imputation)}</td>
         <td className="px-4 py-3 text-muted-foreground">
           {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </td>
@@ -366,7 +391,7 @@ function ExpandedContent({
                 <td className="px-3 py-2">{MOIS_LABELS[l.mois - 1] ?? l.mois}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{fmtEUR(l.cte_mensuel)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{fmtEUR(l.fonpeps_mensuel)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{l.taux_imputation}%</td>
+                <td className="px-3 py-2 text-right tabular-nums">{fmtPct(l.taux_imputation)}</td>
                 <td className="px-3 py-2 text-right tabular-nums font-medium">{fmtEUR(l.montant_impute)}</td>
                 <td className="px-3 py-2 text-right">
                   <Button variant="ghost" size="sm" onClick={() => setEditLine(l)}>
@@ -382,6 +407,8 @@ function ExpandedContent({
         <EditMoisModal
           ligne={editLine}
           isGerant={salarie.type_contrat === "Gérant"}
+          salarieId={salarie.id}
+          salarieNom={salarie.nom}
           onClose={() => setEditLine(null)}
           onDone={() => {
             setEditLine(null);
@@ -429,11 +456,12 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
         const created = await airtablePost(SALARIES_TABLE, {
           nom_salarie: nom,
           type_contrat: "Gérant",
-          date_demarrage_charge: dateDem,
+          date_demarrage_charge: `${dateDem}-01`,
         });
         const records = gerantMois.map((m, i) => {
           const cte = parseFloat(m.cte) || 0;
-          const tx = parseFloat(m.taux) || 0;
+          const tx = parseFloat(m.taux) || 0; // entré en %
+          const txDec = tx / 100; // stocké en décimal
           return {
             fields: {
               cle_primaire: `${nom}_${i + 1}_${ANNEE}`,
@@ -442,8 +470,8 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
               mois: i + 1,
               cte_mensuel: cte,
               fonpeps_mensuel: 0,
-              taux_imputation: tx,
-              montant_impute: cte * (tx / 100),
+              taux_imputation: txDec,
+              montant_impute: cte * txDec,
             },
           };
         });
@@ -458,10 +486,10 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
         const fields: Record<string, unknown> = {
           nom_salarie: nom,
           type_contrat: contrat,
-          date_demarrage_charge: dateDem,
+          date_demarrage_charge: `${dateDem}-01`,
           cte_annuel: parseFloat(cteAnnuel) || 0,
           fonpeps_annuel: parseFloat(fonpepsAnnuel) || 0,
-          taux_imputation: parseFloat(taux) || 0,
+          taux_imputation: (parseFloat(taux) || 0) / 100,
         };
         if (isCDD && dateFin) fields.date_fin_charge = `${dateFin}-01`;
         const created = await airtablePost(SALARIES_TABLE, fields);
@@ -472,7 +500,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             salarie_record_id: recordId,
-            date_effet: dateDem,
+            date_effet: `${dateDem}-01`,
             date_fin_charge: isCDD && dateFin ? `${dateFin}-01` : null,
           }),
         });
@@ -509,19 +537,19 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
             </Select>
           </Field>
           <Field label="Date de démarrage">
-            <Input type="date" value={dateDem} onChange={(e) => setDateDem(e.target.value)} />
+            <Input type="month" value={dateDem} onChange={(e) => setDateDem(e.target.value)} />
           </Field>
 
           {!isGerant && (
             <>
               <Field label="CTE annuel (€)">
-                <Input type="number" value={cteAnnuel} onChange={(e) => setCteAnnuel(e.target.value)} />
+                <Input type="number" value={cteAnnuel} onChange={(e) => setCteAnnuel(e.target.value)} onWheel={blurOnWheel} />
               </Field>
               <Field label="FONPEPS annuel (€)">
-                <Input type="number" value={fonpepsAnnuel} onChange={(e) => setFonpepsAnnuel(e.target.value)} />
+                <Input type="number" value={fonpepsAnnuel} onChange={(e) => setFonpepsAnnuel(e.target.value)} onWheel={blurOnWheel} />
               </Field>
               <Field label="% imputation">
-                <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} />
+                <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
               </Field>
               {isCDD && (
                 <Field label="Date de fin">
@@ -557,6 +585,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
                               setGerantMois(next);
                             }}
                             className="h-8"
+                            onWheel={blurOnWheel}
                           />
                         </td>
                         <td className="px-3 py-1.5">
@@ -569,6 +598,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
                               setGerantMois(next);
                             }}
                             className="h-8"
+                            onWheel={blurOnWheel}
                           />
                         </td>
                       </tr>
@@ -605,7 +635,7 @@ function EditSalarieModal({
 
   const [cte, setCte] = useState(String(salarie.cte_annuel));
   const [fonpeps, setFonpeps] = useState(String(salarie.fonpeps_annuel));
-  const [taux, setTaux] = useState(String(salarie.taux_imputation));
+  const [taux, setTaux] = useState((salarie.taux_imputation * 100).toFixed(1));
   const [dateEffet, setDateEffet] = useState("");
   const [dateFin, setDateFin] = useState(salarie.date_fin ? salarie.date_fin.slice(0, 7) : "");
   const [loading, setLoading] = useState(false);
@@ -620,7 +650,7 @@ function EditSalarieModal({
       const fields: Record<string, unknown> = {
         cte_annuel: parseFloat(cte) || 0,
         fonpeps_annuel: parseFloat(fonpeps) || 0,
-        taux_imputation: parseFloat(taux) || 0,
+        taux_imputation: (parseFloat(taux) || 0) / 100,
       };
       if (dateFin) fields.date_fin_charge = `${dateFin}-01`;
       await airtablePatch(SALARIES_TABLE, salarie.id, fields);
@@ -652,13 +682,13 @@ function EditSalarieModal({
         </DialogHeader>
         <div className="space-y-4">
           <Field label="CTE annuel (€)">
-            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} />
+            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <Field label="FONPEPS annuel (€)">
-            <Input type="number" value={fonpeps} onChange={(e) => setFonpeps(e.target.value)} />
+            <Input type="number" value={fonpeps} onChange={(e) => setFonpeps(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <Field label="% imputation">
-            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} />
+            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <Field label="Date d'effet">
             <Input type="month" value={dateEffet} onChange={(e) => setDateEffet(e.target.value)} />
@@ -701,7 +731,7 @@ function EditGerantMoisModal({
             id: r.id,
             mois: num(f.mois),
             cte: String(num(f.cte_mensuel)),
-            taux: String(num(f.taux_imputation)),
+            taux: (num(f.taux_imputation) * 100).toFixed(1),
           };
         }),
       );
@@ -713,13 +743,16 @@ function EditGerantMoisModal({
     try {
       for (const r of rows) {
         const cte = parseFloat(r.cte) || 0;
-        const tx = parseFloat(r.taux) || 0;
+        const tx = parseFloat(r.taux) || 0; // entré en %
+        const txDec = tx / 100;
         await airtablePatch(SALARIES_MOIS_TABLE, r.id, {
           cte_mensuel: cte,
-          taux_imputation: tx,
-          montant_impute: cte * (tx / 100),
+          taux_imputation: txDec,
+          montant_impute: cte * txDec,
         });
       }
+      // Recalcul cte_annuel à partir de la somme des cte_mensuel
+      await recomputeCteAnnuel(salarie.id, salarie.nom);
       toast.success("Mis à jour ✓");
       onDone();
     } catch (e) {
@@ -761,6 +794,7 @@ function EditGerantMoisModal({
                           setRows(next);
                         }}
                         className="h-8"
+                        onWheel={blurOnWheel}
                       />
                     </td>
                     <td className="px-3 py-1.5">
@@ -773,6 +807,7 @@ function EditGerantMoisModal({
                           setRows(next);
                         }}
                         className="h-8"
+                        onWheel={blurOnWheel}
                       />
                     </td>
                   </tr>
@@ -856,33 +891,40 @@ function DeleteSalarieModal({
 function EditMoisModal({
   ligne,
   isGerant,
+  salarieId,
+  salarieNom,
   onClose,
   onDone,
 }: {
   ligne: SalarieMois;
   isGerant: boolean;
+  salarieId: string;
+  salarieNom: string;
   onClose: () => void;
   onDone: () => void;
 }) {
   const [cte, setCte] = useState(String(ligne.cte_mensuel));
-  const [taux, setTaux] = useState(String(ligne.taux_imputation));
+  const [taux, setTaux] = useState((ligne.taux_imputation * 100).toFixed(1));
   const [loading, setLoading] = useState(false);
 
   const cteNum = parseFloat(cte) || 0;
-  const txNum = parseFloat(taux) || 0;
+  const txNum = parseFloat(taux) || 0; // entré en %
+  const txDec = txNum / 100;
   const fonpeps = ligne.fonpeps_mensuel;
   const montantImpute = isGerant
-    ? cteNum * (txNum / 100)
-    : (cteNum - fonpeps) * (txNum / 100);
+    ? cteNum * txDec
+    : (cteNum - fonpeps) * txDec;
 
   const submit = async () => {
     setLoading(true);
     try {
       await airtablePatch(SALARIES_MOIS_TABLE, ligne.id, {
         cte_mensuel: cteNum,
-        taux_imputation: txNum,
+        taux_imputation: txDec,
         montant_impute: montantImpute,
       });
+      // Recalcul du cte_annuel à partir de toutes les lignes mensuelles
+      await recomputeCteAnnuel(salarieId, salarieNom);
       toast.success("Ligne mise à jour ✓");
       onDone();
     } catch (e) {
@@ -900,15 +942,15 @@ function EditMoisModal({
         </DialogHeader>
         <div className="space-y-4">
           <Field label="CTE mensuel (€)">
-            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} />
+            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           {!isGerant && (
             <Field label="FONPEPS mensuel (€) — non modifiable">
-              <Input type="number" value={fonpeps} disabled />
+              <Input type="number" value={fonpeps} disabled onWheel={blurOnWheel} />
             </Field>
           )}
           <Field label="% imputation">
-            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} />
+            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <div className="rounded border border-border bg-muted/20 px-3 py-2 text-sm">
             <span className="text-muted-foreground">Montant imputé :</span>{" "}
