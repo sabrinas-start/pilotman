@@ -141,12 +141,17 @@ function badgeForContrat(t: ContratType) {
   }
 }
 
+type SortKey = "nom" | "type_contrat" | "date_demarrage" | "date_fin" | "cte_annuel" | "taux_imputation";
+type SortDir = "asc" | "desc";
+
 function SalariesPage() {
   const salariesQ = useAirtable(SALARIES_TABLE, {});
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editSalarie, setEditSalarie] = useState<Salarie | null>(null);
   const [deleteSalarie, setDeleteSalarie] = useState<Salarie | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("nom");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const salaries: Salarie[] = useMemo(() => {
     if (!salariesQ.data) return [];
@@ -167,6 +172,37 @@ function SalariesPage() {
       .filter((s) => s.nom);
   }, [salariesQ.data]);
 
+  const sortedSalaries = useMemo(() => {
+    const arr = [...salaries];
+    arr.sort((a, b) => {
+      const va = a[sortKey];
+      const vb = b[sortKey];
+      let cmp = 0;
+      if (va == null && vb == null) cmp = 0;
+      else if (va == null) cmp = -1;
+      else if (vb == null) cmp = 1;
+      else if (typeof va === "number" && typeof vb === "number") cmp = va - vb;
+      else cmp = String(va).localeCompare(String(vb), "fr", { numeric: true });
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }, [salaries, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+  const sortIndicator = (key: SortKey) => sortKey === key ? (sortDir === "asc" ? " ▲" : " ▼") : "";
+
+  const SortableTh = ({ k, align, children }: { k: SortKey; align?: "right"; children: React.ReactNode }) => (
+    <th
+      className={cn("px-4 py-3 cursor-pointer select-none hover:text-foreground", align === "right" ? "text-right" : "text-left")}
+      onClick={() => toggleSort(k)}
+    >
+      {children}{sortIndicator(k)}
+    </th>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -183,12 +219,12 @@ function SalariesPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-4 py-3 text-left">Nom</th>
-              <th className="px-4 py-3 text-left">Contrat</th>
-              <th className="px-4 py-3 text-left">Date démarrage</th>
-              <th className="px-4 py-3 text-left">Date fin</th>
-              <th className="px-4 py-3 text-right">CTE annuel</th>
-              <th className="px-4 py-3 text-right">% imputation</th>
+              <SortableTh k="nom">Nom</SortableTh>
+              <SortableTh k="type_contrat">Contrat</SortableTh>
+              <SortableTh k="date_demarrage">Date démarrage</SortableTh>
+              <SortableTh k="date_fin">Date fin</SortableTh>
+              <SortableTh k="cte_annuel" align="right">CTE annuel</SortableTh>
+              <SortableTh k="taux_imputation" align="right">% imputation</SortableTh>
               <th className="px-4 py-3 w-10" />
             </tr>
           </thead>
@@ -207,7 +243,7 @@ function SalariesPage() {
                 </td>
               </tr>
             )}
-            {salaries.map((s) => {
+            {sortedSalaries.map((s) => {
               const isOpen = expanded === s.id;
               const badge = badgeForContrat(s.type_contrat);
               return (
