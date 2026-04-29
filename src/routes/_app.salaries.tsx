@@ -117,6 +117,19 @@ async function airtableDelete(tableId: string, recordId: string) {
   return res.json();
 }
 
+// Recalcule cte_annuel d'un salarié à partir de toutes ses lignes mensuelles 2026
+async function recomputeCteAnnuel(salarieId: string, nomSalarie: string) {
+  const url = `/api/airtable?tableId=${SALARIES_MOIS_TABLE}&filterByFormula=${encodeURIComponent(
+    `AND({nom_salarie}="${nomSalarie}", {annee}=${ANNEE})`,
+  )}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(await res.text());
+  const json = (await res.json()) as { records: Array<{ fields: Record<string, unknown> }> };
+  const total = json.records.reduce((sum, r) => sum + num(r.fields.cte_mensuel), 0);
+  await airtablePatch(SALARIES_TABLE, salarieId, { cte_annuel: total });
+  return total;
+}
+
 function badgeForContrat(t: ContratType) {
   switch (t) {
     case "CDI":
