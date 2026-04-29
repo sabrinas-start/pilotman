@@ -535,19 +535,19 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
             </Select>
           </Field>
           <Field label="Date de démarrage">
-            <Input type="date" value={dateDem} onChange={(e) => setDateDem(e.target.value)} />
+            <Input type="month" value={dateDem} onChange={(e) => setDateDem(e.target.value)} />
           </Field>
 
           {!isGerant && (
             <>
               <Field label="CTE annuel (€)">
-                <Input type="number" value={cteAnnuel} onChange={(e) => setCteAnnuel(e.target.value)} />
+                <Input type="number" value={cteAnnuel} onChange={(e) => setCteAnnuel(e.target.value)} onWheel={blurOnWheel} />
               </Field>
               <Field label="FONPEPS annuel (€)">
-                <Input type="number" value={fonpepsAnnuel} onChange={(e) => setFonpepsAnnuel(e.target.value)} />
+                <Input type="number" value={fonpepsAnnuel} onChange={(e) => setFonpepsAnnuel(e.target.value)} onWheel={blurOnWheel} />
               </Field>
               <Field label="% imputation">
-                <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} />
+                <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
               </Field>
               {isCDD && (
                 <Field label="Date de fin">
