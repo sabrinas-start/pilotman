@@ -596,6 +596,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
                               setGerantMois(next);
                             }}
                             className="h-8"
+                            onWheel={blurOnWheel}
                           />
                         </td>
                       </tr>
