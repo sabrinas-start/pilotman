@@ -292,10 +292,10 @@ function ExpandableRow({
             {badge.label}
           </span>
         </td>
-        <td className="px-4 py-3 text-muted-foreground">{salarie.date_demarrage || "—"}</td>
-        <td className="px-4 py-3 text-muted-foreground">{salarie.date_fin || "—"}</td>
+        <td className="px-4 py-3 text-muted-foreground">{fmtMonthYear(salarie.date_demarrage)}</td>
+        <td className="px-4 py-3 text-muted-foreground">{salarie.date_fin ? fmtMonthYear(salarie.date_fin) : "—"}</td>
         <td className="px-4 py-3 text-right tabular-nums">{fmtEUR(salarie.cte_annuel)}</td>
-        <td className="px-4 py-3 text-right tabular-nums">{salarie.taux_imputation}%</td>
+        <td className="px-4 py-3 text-right tabular-nums">{fmtPct(salarie.taux_imputation)}</td>
         <td className="px-4 py-3 text-muted-foreground">
           {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </td>
