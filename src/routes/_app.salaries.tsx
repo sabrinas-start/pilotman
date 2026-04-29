@@ -63,13 +63,13 @@ type SalarieMois = {
 };
 
 const fmtEUR = (n: number) =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+  `${n.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} €`;
 
 const num = (v: unknown): number => (typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) || 0 : 0);
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
 // taux_imputation est stocké en décimal (1 = 100%, 0.8 = 80%)
-const fmtPct = (decimal: number): string => `${(decimal * 100).toFixed(1)} %`;
+const fmtPct = (decimal: number): string => `${Math.round(decimal * 100)} %`;
 const fmtMonthYear = (date: string): string => {
   if (!date) return "—";
   const d = new Date(date);
