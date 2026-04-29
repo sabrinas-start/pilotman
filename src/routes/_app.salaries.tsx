@@ -648,7 +648,7 @@ function EditSalarieModal({
       const fields: Record<string, unknown> = {
         cte_annuel: parseFloat(cte) || 0,
         fonpeps_annuel: parseFloat(fonpeps) || 0,
-        taux_imputation: parseFloat(taux) || 0,
+        taux_imputation: (parseFloat(taux) || 0) / 100,
       };
       if (dateFin) fields.date_fin_charge = `${dateFin}-01`;
       await airtablePatch(SALARIES_TABLE, salarie.id, fields);
