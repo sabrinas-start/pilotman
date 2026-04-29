@@ -471,7 +471,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
               cte_mensuel: cte,
               fonpeps_mensuel: 0,
               taux_imputation: txDec,
-              montant_impute: cte * txDec,
+              montant_impute: (cte - 0) * txDec,
             },
           };
         });
