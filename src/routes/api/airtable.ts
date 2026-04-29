@@ -130,6 +130,70 @@ export const Route = createFileRoute("/api/airtable")({
           );
         }
       },
+      POST: async ({ request }) => {
+        const token = process.env.AIRTABLE_TOKEN;
+        if (!token) {
+          return Response.json({ error: "AIRTABLE_TOKEN is not configured" }, { status: 500 });
+        }
+        let body: { tableId?: string; fields?: Record<string, unknown>; records?: Array<{ fields: Record<string, unknown> }> };
+        try {
+          body = (await request.json()) as typeof body;
+        } catch {
+          return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+        }
+        const { tableId, fields, records } = body;
+        if (!tableId || (!fields && !records)) {
+          return Response.json({ error: "tableId and fields (or records) required" }, { status: 400 });
+        }
+        try {
+          const apiUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${tableId}`;
+          const payload = records
+            ? { records, typecast: true }
+            : { fields, typecast: true };
+          const res = await fetch(apiUrl, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            return Response.json({ error: `Airtable POST error: ${res.status}`, details: text }, { status: res.status });
+          }
+          const json = await res.json();
+          return Response.json(json);
+        } catch (err) {
+          console.error("Airtable POST failed:", err);
+          return Response.json({ error: "Failed to create Airtable record", details: String(err) }, { status: 500 });
+        }
+      },
+      DELETE: async ({ request }) => {
+        const token = process.env.AIRTABLE_TOKEN;
+        if (!token) {
+          return Response.json({ error: "AIRTABLE_TOKEN is not configured" }, { status: 500 });
+        }
+        const url = new URL(request.url);
+        const tableId = url.searchParams.get("tableId");
+        const recordId = url.searchParams.get("recordId");
+        if (!tableId || !recordId) {
+          return Response.json({ error: "tableId and recordId required" }, { status: 400 });
+        }
+        try {
+          const apiUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${tableId}/${recordId}`;
+          const res = await fetch(apiUrl, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            return Response.json({ error: `Airtable DELETE error: ${res.status}`, details: text }, { status: res.status });
+          }
+          const json = await res.json();
+          return Response.json(json);
+        } catch (err) {
+          console.error("Airtable DELETE failed:", err);
+          return Response.json({ error: "Failed to delete Airtable record", details: String(err) }, { status: 500 });
+        }
+      },
     },
   },
 });
