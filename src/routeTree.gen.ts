@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAirtableRouteImport } from './routes/api/airtable'
 import { Route as AppSimulateurRouteImport } from './routes/_app.simulateur'
+import { Route as AppSalariesRouteImport } from './routes/_app.salaries'
 import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppDroitsRouteImport } from './routes/_app.droits'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -36,6 +37,11 @@ const AppSimulateurRoute = AppSimulateurRouteImport.update({
   path: '/simulateur',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSalariesRoute = AppSalariesRouteImport.update({
+  id: '/salaries',
+  path: '/salaries',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppParametresRoute = AppParametresRouteImport.update({
   id: '/parametres',
   path: '/parametres',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/droits': typeof AppDroitsRoute
   '/parametres': typeof AppParametresRoute
+  '/salaries': typeof AppSalariesRoute
   '/simulateur': typeof AppSimulateurRoute
   '/api/airtable': typeof ApiAirtableRoute
 }
@@ -65,6 +72,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/droits': typeof AppDroitsRoute
   '/parametres': typeof AppParametresRoute
+  '/salaries': typeof AppSalariesRoute
   '/simulateur': typeof AppSimulateurRoute
   '/api/airtable': typeof ApiAirtableRoute
 }
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/droits': typeof AppDroitsRoute
   '/_app/parametres': typeof AppParametresRoute
+  '/_app/salaries': typeof AppSalariesRoute
   '/_app/simulateur': typeof AppSimulateurRoute
   '/api/airtable': typeof ApiAirtableRoute
 }
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/droits'
     | '/parametres'
+    | '/salaries'
     | '/simulateur'
     | '/api/airtable'
   fileRoutesByTo: FileRoutesByTo
@@ -93,6 +103,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/droits'
     | '/parametres'
+    | '/salaries'
     | '/simulateur'
     | '/api/airtable'
   id:
@@ -102,6 +113,7 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/droits'
     | '/_app/parametres'
+    | '/_app/salaries'
     | '/_app/simulateur'
     | '/api/airtable'
   fileRoutesById: FileRoutesById
@@ -142,6 +154,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSimulateurRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/salaries': {
+      id: '/_app/salaries'
+      path: '/salaries'
+      fullPath: '/salaries'
+      preLoaderRoute: typeof AppSalariesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/parametres': {
       id: '/_app/parametres'
       path: '/parametres'
@@ -170,6 +189,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppDroitsRoute: typeof AppDroitsRoute
   AppParametresRoute: typeof AppParametresRoute
+  AppSalariesRoute: typeof AppSalariesRoute
   AppSimulateurRoute: typeof AppSimulateurRoute
 }
 
@@ -177,6 +197,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppDroitsRoute: AppDroitsRoute,
   AppParametresRoute: AppParametresRoute,
+  AppSalariesRoute: AppSalariesRoute,
   AppSimulateurRoute: AppSimulateurRoute,
 }
 
