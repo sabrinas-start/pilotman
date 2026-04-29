@@ -680,13 +680,13 @@ function EditSalarieModal({
         </DialogHeader>
         <div className="space-y-4">
           <Field label="CTE annuel (€)">
-            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} />
+            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <Field label="FONPEPS annuel (€)">
-            <Input type="number" value={fonpeps} onChange={(e) => setFonpeps(e.target.value)} />
+            <Input type="number" value={fonpeps} onChange={(e) => setFonpeps(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <Field label="% imputation">
-            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} />
+            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <Field label="Date d'effet">
             <Input type="month" value={dateEffet} onChange={(e) => setDateEffet(e.target.value)} />
