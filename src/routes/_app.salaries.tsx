@@ -719,7 +719,7 @@ function EditGerantMoisModal({
     filterByFormula: `AND({nom_salarie}="${salarie.nom}", {annee}=${ANNEE})`,
     sort: [{ field: "mois", direction: "asc" }],
   });
-  const [rows, setRows] = useState<Array<{ id: string; mois: number; cte: string; taux: string }>>([]);
+  const [rows, setRows] = useState<Array<{ id: string; mois: number; cte: string; taux: string; fonpeps: number }>>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -732,6 +732,7 @@ function EditGerantMoisModal({
             mois: num(f.mois),
             cte: String(num(f.cte_mensuel)),
             taux: (num(f.taux_imputation) * 100).toFixed(1),
+            fonpeps: num(f.fonpeps_mensuel),
           };
         }),
       );
@@ -748,7 +749,7 @@ function EditGerantMoisModal({
         await airtablePatch(SALARIES_MOIS_TABLE, r.id, {
           cte_mensuel: cte,
           taux_imputation: txDec,
-          montant_impute: cte * txDec,
+          montant_impute: (cte - r.fonpeps) * txDec,
         });
       }
       // Recalcul cte_annuel à partir de la somme des cte_mensuel
