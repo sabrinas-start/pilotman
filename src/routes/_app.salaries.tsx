@@ -391,7 +391,7 @@ function ExpandedContent({
                 <td className="px-3 py-2">{MOIS_LABELS[l.mois - 1] ?? l.mois}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{fmtEUR(l.cte_mensuel)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{fmtEUR(l.fonpeps_mensuel)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{l.taux_imputation}%</td>
+                <td className="px-3 py-2 text-right tabular-nums">{fmtPct(l.taux_imputation)}</td>
                 <td className="px-3 py-2 text-right tabular-nums font-medium">{fmtEUR(l.montant_impute)}</td>
                 <td className="px-3 py-2 text-right">
                   <Button variant="ghost" size="sm" onClick={() => setEditLine(l)}>
