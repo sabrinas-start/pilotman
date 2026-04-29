@@ -741,13 +741,16 @@ function EditGerantMoisModal({
     try {
       for (const r of rows) {
         const cte = parseFloat(r.cte) || 0;
-        const tx = parseFloat(r.taux) || 0;
+        const tx = parseFloat(r.taux) || 0; // entré en %
+        const txDec = tx / 100;
         await airtablePatch(SALARIES_MOIS_TABLE, r.id, {
           cte_mensuel: cte,
-          taux_imputation: tx,
-          montant_impute: cte * (tx / 100),
+          taux_imputation: txDec,
+          montant_impute: cte * txDec,
         });
       }
+      // Recalcul cte_annuel à partir de la somme des cte_mensuel
+      await recomputeCteAnnuel(salarie.id, salarie.nom);
       toast.success("Mis à jour ✓");
       onDone();
     } catch (e) {
