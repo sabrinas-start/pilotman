@@ -911,9 +911,7 @@ function EditMoisModal({
   const txNum = parseFloat(taux) || 0; // entré en %
   const txDec = txNum / 100;
   const fonpeps = ligne.fonpeps_mensuel;
-  const montantImpute = isGerant
-    ? cteNum * txDec
-    : (cteNum - fonpeps) * txDec;
+  const montantImpute = (cteNum - fonpeps) * txDec;
 
   const submit = async () => {
     setLoading(true);
