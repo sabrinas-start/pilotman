@@ -889,33 +889,40 @@ function DeleteSalarieModal({
 function EditMoisModal({
   ligne,
   isGerant,
+  salarieId,
+  salarieNom,
   onClose,
   onDone,
 }: {
   ligne: SalarieMois;
   isGerant: boolean;
+  salarieId: string;
+  salarieNom: string;
   onClose: () => void;
   onDone: () => void;
 }) {
   const [cte, setCte] = useState(String(ligne.cte_mensuel));
-  const [taux, setTaux] = useState(String(ligne.taux_imputation));
+  const [taux, setTaux] = useState((ligne.taux_imputation * 100).toFixed(1));
   const [loading, setLoading] = useState(false);
 
   const cteNum = parseFloat(cte) || 0;
-  const txNum = parseFloat(taux) || 0;
+  const txNum = parseFloat(taux) || 0; // entré en %
+  const txDec = txNum / 100;
   const fonpeps = ligne.fonpeps_mensuel;
   const montantImpute = isGerant
-    ? cteNum * (txNum / 100)
-    : (cteNum - fonpeps) * (txNum / 100);
+    ? cteNum * txDec
+    : (cteNum - fonpeps) * txDec;
 
   const submit = async () => {
     setLoading(true);
     try {
       await airtablePatch(SALARIES_MOIS_TABLE, ligne.id, {
         cte_mensuel: cteNum,
-        taux_imputation: txNum,
+        taux_imputation: txDec,
         montant_impute: montantImpute,
       });
+      // Recalcul du cte_annuel à partir de toutes les lignes mensuelles
+      await recomputeCteAnnuel(salarieId, salarieNom);
       toast.success("Ligne mise à jour ✓");
       onDone();
     } catch (e) {
@@ -933,15 +940,15 @@ function EditMoisModal({
         </DialogHeader>
         <div className="space-y-4">
           <Field label="CTE mensuel (€)">
-            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} />
+            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           {!isGerant && (
             <Field label="FONPEPS mensuel (€) — non modifiable">
-              <Input type="number" value={fonpeps} disabled />
+              <Input type="number" value={fonpeps} disabled onWheel={blurOnWheel} />
             </Field>
           )}
           <Field label="% imputation">
-            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} />
+            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <div className="rounded border border-border bg-muted/20 px-3 py-2 text-sm">
             <span className="text-muted-foreground">Montant imputé :</span>{" "}
