@@ -180,65 +180,6 @@ function DashboardPage() {
 
   const dateSnapshot = str(metriques.date_snapshot) || "—";
 
-  // Données graphiques (CA mensuel par revenus + objectif mensuel)
-  const monthlyChartData = useMemo(() => {
-    const monthsLabels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
-    const buckets = monthsLabels.map((m, i) => ({
-      mois: m,
-      moisNum: i + 1,
-      ca: 0,
-      caAudio: 0,
-      caVideo: 0,
-      objectif: 0,
-      objectifAudio: 0,
-      objectifVideo: 0,
-    }));
-    for (const r of revenus) {
-      const dateStr = str(r.fields.date_facturation);
-      if (!dateStr) continue;
-      const m = new Date(dateStr).getMonth();
-      if (m < 0 || m > 11) continue;
-      const montant = num(r.fields.montant_ht);
-      const pole = str(r.fields.pole).toLowerCase();
-      buckets[m].ca += montant;
-      if (pole.includes("audio") || pole.includes("son")) buckets[m].caAudio += montant;
-      else if (pole.includes("video") || pole.includes("vidéo") || pole.includes("image"))
-        buckets[m].caVideo += montant;
-    }
-    const objAudio = num(objectifs.ca_objectif_audio);
-    const objVideo = num(objectifs.ca_objectif_video);
-    for (let i = 0; i < 12; i++) {
-      const sa = num(objectifs[`saisonnalite_audio_${String(i + 1).padStart(2, "0")}`]);
-      const sv = num(objectifs[`saisonnalite_video_${String(i + 1).padStart(2, "0")}`]);
-      buckets[i].objectifAudio = objAudio * sa;
-      buckets[i].objectifVideo = objVideo * sv;
-      buckets[i].objectif = buckets[i].objectifAudio + buckets[i].objectifVideo;
-    }
-    return buckets;
-  }, [revenus, objectifs]);
-
-  // Cumul
-  const cumulChartData = useMemo(() => {
-    let cumCa = 0, cumCaA = 0, cumCaV = 0, cumObj = 0, cumObjA = 0, cumObjV = 0;
-    return monthlyChartData.map((b) => {
-      cumCa += b.ca;
-      cumCaA += b.caAudio;
-      cumCaV += b.caVideo;
-      cumObj += b.objectif;
-      cumObjA += b.objectifAudio;
-      cumObjV += b.objectifVideo;
-      return {
-        mois: b.mois,
-        ca: cumCa,
-        caAudio: cumCaA,
-        caVideo: cumCaV,
-        objectif: cumObj,
-        objectifAudio: cumObjA,
-        objectifVideo: cumObjV,
-      };
-    });
-  }, [monthlyChartData]);
-
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4">
