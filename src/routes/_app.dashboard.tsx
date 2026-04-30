@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useAirtable, type AirtableRecord } from "@/hooks/useAirtable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import {
   ResponsiveContainer,
   BarChart,
