@@ -4,18 +4,6 @@ import { useAirtable, type AirtableRecord } from "@/hooks/useAirtable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-  LineChart,
-  Line,
-} from "recharts";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Tableau de bord — Pôle Tournage" }] }),
