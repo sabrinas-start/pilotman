@@ -294,12 +294,7 @@ function DashboardPage() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Réalisation objectif YTD
             </p>
-            <p
-              className={cn(
-                "mt-1 text-3xl font-semibold",
-                pctRealisationYTD >= 1 ? "text-positive" : "text-destructive",
-              )}
-            >
+            <p className="mt-1 text-3xl font-semibold text-foreground">
               {(pctRealisationYTD * 100).toFixed(0)}%
             </p>
             <div className="mt-2 h-0.5 w-full rounded bg-border overflow-hidden">
