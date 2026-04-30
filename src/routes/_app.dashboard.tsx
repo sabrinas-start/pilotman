@@ -4,6 +4,7 @@ import { useAirtable, type AirtableRecord } from "@/hooks/useAirtable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Tableau de bord — Pôle Tournage" }] }),
@@ -31,6 +32,9 @@ const C_POS = "#4CAF7D";
 const C_NEG = "#E05252";
 
 function DashboardPage() {
+  const { user } = useAuth();
+  const profil = user?.profil;
+  const isPoleOnly = profil === "audio" || profil === "video";
   const moisCourant = new Date().getMonth() + 1;
   const [graphScope, setGraphScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
 
