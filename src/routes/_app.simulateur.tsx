@@ -5,7 +5,6 @@ import { useAirtable, type AirtableRecord } from "@/hooks/useAirtable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight, RotateCcw, ChevronDown } from "lucide-react";
 
@@ -85,7 +84,6 @@ function SimulateurPage() {
   const chargesReelles: AirtableRecord[] = chargesReellesQ.data ?? [];
   const chargesProv: AirtableRecord[] = chargesProvQ.data ?? [];
 
-  // Real values from Airtable (immutable references)
   const real = useMemo(() => {
     const moisCourant = new Date().getMonth() + 1;
     const pa = num(objectifs.pct_attribution_audio);
@@ -138,7 +136,6 @@ function SimulateurPage() {
     };
   }, [metriques, objectifs, chargesReelles, chargesProv]);
 
-  // ── Simulated state (initialized from real on load) ────────────────────
   const [caObjAudio, setCaObjAudio] = useState(0);
   const [caObjVideo, setCaObjVideo] = useState(0);
   const [pctAudio, setPctAudio] = useState(0);
@@ -152,7 +149,6 @@ function SimulateurPage() {
   const [saisonAudio, setSaisonAudio] = useState<number[]>(Array(12).fill(0));
   const [saisonVideo, setSaisonVideo] = useState<number[]>(Array(12).fill(0));
 
-  // Simulated charge
   const [chgLabel, setChgLabel] = useState("");
   const [chgMontant, setChgMontant] = useState("");
   const [chgPole, setChgPole] = useState<ChargePole>("global");
@@ -178,7 +174,6 @@ function SimulateurPage() {
     setChgPole("global");
   };
 
-  // Hydrate once when data ready
   useEffect(() => {
     if (!hydrated && recordId && metriquesQ.data) {
       reset();
@@ -194,7 +189,7 @@ function SimulateurPage() {
       chargesReellesQ.refetch(),
       chargesProvQ.refetch(),
     ]);
-    setHydrated(false); // triggers re-hydration on next render
+    setHydrated(false);
   };
 
   // ── Computed simulated values ─────────────────────────────────────────
@@ -203,6 +198,7 @@ function SimulateurPage() {
 
   const totalSaisonAudio = saisonAudio.reduce((s, v) => s + v, 0);
   const totalSaisonVideo = saisonVideo.reduce((s, v) => s + v, 0);
+  const moisConfigures = saisonAudio.filter((v) => v > 0).length + saisonVideo.filter((v) => v > 0).length;
 
   const chgMontantNum = parseFloat(chgMontant) || 0;
   const chgIsAudio = chgPole === "audio" ? chgMontantNum : chgPole === "global" ? chgMontantNum * (pctAudio / 100) : 0;
@@ -228,7 +224,6 @@ function SimulateurPage() {
   const enveloppeVideo =
     resT > 0 ? Math.min(Math.max(resT * partVideo, plancherVideo), maxVideo) : plancherVideo;
 
-  // Indicator 2 — uses simulated saisonAudio for pctAnneeEcoulee
   const pctAnneeEcoulee = saisonAudio
     .slice(0, real.moisCourant)
     .reduce((s, v) => s + v / 100, 0);
@@ -242,7 +237,6 @@ function SimulateurPage() {
   const indicateur2 = resPondere > 0 ? resPondere * (1 - reserveDecimal) : resPondere;
   const montantReserve = resPondere > 0 ? resPondere * reserveDecimal : 0;
 
-  // ── Real reference values for "Réel : X €" hints ──────────────────────
   const realChargesAudioTotal =
     real.chargesAudio + real.chargesCommunes * real.pctAudio;
   const realChargesVideoTotal =
@@ -273,7 +267,6 @@ function SimulateurPage() {
   const realResPond = realCaPond - realChYTD;
   const realInd2 = realResPond > 0 ? realResPond * (1 - real.reserve) : realResPond;
 
-  // ── Per-field PATCH ────────────────────────────────────────────────────
   async function patchOne(field: string, value: unknown) {
     if (!recordId) {
       notifyError("Enregistrement 2026 introuvable");
@@ -329,412 +322,435 @@ function SimulateurPage() {
     patchMany(payload);
   };
 
-  // Render
   if (loading && !hydrated) {
     return (
-      <div className="space-y-4" style={{ backgroundColor: "#181820", margin: "-2rem", padding: "2rem", minHeight: "100vh" }}>
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="-m-8 flex min-h-screen" style={{ backgroundColor: "#161616" }}>
+        <div className="p-6 w-full">
+          <Skeleton className="h-32 w-full" />
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      className="space-y-8"
-      style={{ backgroundColor: "#181820", margin: "-2rem", padding: "2rem", minHeight: "100vh" }}
+      className="-m-8 flex min-h-screen"
+      style={{ backgroundColor: "#161616" }}
     >
-      <header className="border-b border-border pb-6">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-semibold text-foreground">Simulateur · {ANNEE}</h2>
-          <span
-            className="rounded px-2 py-0.5 text-xs font-medium"
-            style={{ backgroundColor: "rgba(232, 197, 71, 0.15)", color: "#E8C547" }}
-          >
-            Simulation
-          </span>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Snapshot au {real.dateSnapshot} · Modifiez les paramètres pour voir l'impact en temps réel.
-        </p>
-      </header>
-
-      {/* SECTION 1 — Paramètres simulés */}
-      <section className="rounded-lg border border-border bg-surface p-6">
-        <div className="mb-5 flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-foreground">Paramètres · modifiez pour simuler</h3>
-          <span
-            className="rounded px-2 py-0.5 text-xs font-medium"
-            style={{ backgroundColor: "rgba(232, 197, 71, 0.15)", color: "#E8C547" }}
-          >
-            Simulation
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* Colonne gauche — Paramètres annuels */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground">Paramètres annuels</h4>
-
-            <SliderField
-              label="CA objectif Audio"
-              suffix="€"
-              pole="audio"
-              value={caObjAudio}
-              min={0}
-              max={150000}
-              step={1000}
-              onChange={setCaObjAudio}
-              onApply={() => patchOne("ca_objectif_audio", caObjAudio)}
-            />
-            <SliderField
-              label="CA objectif Vidéo"
-              suffix="€"
-              pole="video"
-              value={caObjVideo}
-              min={0}
-              max={150000}
-              step={1000}
-              onChange={setCaObjVideo}
-              onApply={() => patchOne("ca_objectif_video", caObjVideo)}
-            />
-            <ReadonlyField label="CA objectif Global (calculé)" value={fmtEUR(caObjGlobal)} />
-
-            <SliderField
-              label="% attribution Audio"
-              suffix="%"
-              pole="audio"
-              value={pctAudio}
-              min={0}
-              max={100}
-              step={1}
-              onChange={setPctAudio}
-              onApply={() =>
-                patchMany({
-                  pct_attribution_audio: pctAudio / 100,
-                  pct_attribution_video: pctVideo / 100,
-                })
-              }
-            />
-            <ReadonlyField
-              label="% attribution Vidéo (calculé)"
-              value={`${pctVideo.toFixed(0)} %`}
-              pole="video"
-            />
-
-            <SliderField
-              label="Réserve de sécurité"
-              suffix="%"
-              value={reserve}
-              min={0}
-              max={50}
-              step={1}
-              onChange={setReserve}
-              onApply={() => patchOne("reserve_securite", reserveDecimal)}
-            />
-
-            <div className="grid grid-cols-2 gap-3">
-              <NumberField
-                label="Plancher Audio"
-                suffix="€"
-                pole="audio"
-                value={plancherAudio}
-                min={0}
-                onChange={setPlancherAudio}
-                onApply={() => patchOne("plancher_audio", plancherAudio)}
-              />
-              <NumberField
-                label="Plafond Audio"
-                suffix="€"
-                pole="audio"
-                value={plafondAudio}
-                min={0}
-                onChange={setPlafondAudio}
-                onApply={() => patchOne("plafond_audio", plafondAudio)}
-              />
-              <NumberField
-                label="Plancher Vidéo"
-                suffix="€"
-                pole="video"
-                value={plancherVideo}
-                min={0}
-                onChange={setPlancherVideo}
-                onApply={() => patchOne("plancher_video", plancherVideo)}
-              />
-              <NumberField
-                label="Plafond Vidéo"
-                suffix="€"
-                pole="video"
-                value={plafondVideo}
-                min={0}
-                onChange={setPlafondVideo}
-                onApply={() => patchOne("plafond_video", plafondVideo)}
-              />
-            </div>
-
-            <SliderField
-              label="Taux concrétisation Option"
-              suffix="%"
-              value={tauxOption}
-              min={0}
-              max={100}
-              step={1}
-              onChange={setTauxOption}
-              onApply={() => patchOne("taux_concretisation_option", tauxOption / 100)}
-            />
-            <SliderField
-              label="Taux concrétisation Confirmé"
-              suffix="%"
-              value={tauxConfirme}
-              min={0}
-              max={100}
-              step={1}
-              onChange={setTauxConfirme}
-              onApply={() => patchOne("taux_concretisation_confirme", tauxConfirme / 100)}
-            />
-
-            {/* Saisonnalité avancée */}
-            <div className="mt-4 rounded-md border border-border">
-              <button
-                type="button"
-                onClick={() => setSeasonOpen((o) => !o)}
-                className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-foreground"
-              >
-                <span>Saisonnalité avancée</span>
-                <ChevronDown
-                  className={cn("h-4 w-4 transition-transform", seasonOpen && "rotate-180")}
-                />
-              </button>
-              {seasonOpen && (
-                <div className="space-y-4 border-t border-border p-4">
-                  <SeasonSimGrid
-                    title="Audio"
-                    pole="audio"
-                    values={saisonAudio}
-                    onChange={(i, v) =>
-                      setSaisonAudio((p) => p.map((x, idx) => (idx === i ? v : x)))
-                    }
-                    total={totalSaisonAudio}
-                  />
-                  <SeasonSimGrid
-                    title="Vidéo"
-                    pole="video"
-                    values={saisonVideo}
-                    onChange={(i, v) =>
-                      setSaisonVideo((p) => p.map((x, idx) => (idx === i ? v : x)))
-                    }
-                    total={totalSaisonVideo}
-                    onCopyFrom={() => setSaisonVideo([...saisonAudio])}
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={applySaisonnalite}
-                      className="bg-accent text-accent-foreground hover:bg-accent/90"
-                    >
-                      Appliquer la saisonnalité
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="pt-4">
-              <Button
-                onClick={applyAll}
-                className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-              >
-                Appliquer tous les paramètres
-              </Button>
-            </div>
-          </div>
-
-          {/* Colonne droite — Charge simulée */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground">Charge simulée</h4>
-            <p className="text-xs text-muted-foreground">
-              S'ajoute aux charges réelles dans tous les calculs. Non écrite dans Airtable.
-            </p>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
-                Libellé
-              </span>
-              <Input
-                value={chgLabel}
-                onChange={(e) => setChgLabel(e.target.value)}
-                placeholder="ex. Achat matériel"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
-                Montant
-              </span>
-              <div className="relative">
-                <Input
-                  value={chgMontant}
-                  onChange={(e) => setChgMontant(e.target.value)}
-                  type="number"
-                  className="pr-8"
-                />
-                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-                  €
-                </span>
-              </div>
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
-                Pôle
-              </span>
-              <select
-                value={chgPole}
-                onChange={(e) => setChgPole(e.target.value as ChargePole)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="global">Global</option>
-                <option value="audio">Audio</option>
-                <option value="video">Vidéo</option>
-              </select>
-            </label>
-
-            {chgMontantNum > 0 && (
-              <div className="rounded-md border border-border bg-background/30 p-3 text-xs text-muted-foreground">
-                Imputation simulée :{" "}
-                <span style={{ color: "var(--pole-audio-text)" }}>Audio {fmtEUR(chgIsAudio)}</span>
-                {" · "}
-                <span style={{ color: "var(--pole-video-text)" }}>Vidéo {fmtEUR(chgIsVideo)}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 2 — Résultats simulés */}
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <SimMetricCard
-          title="CA Réel YTD"
-          value={fmtEUR(real.caTotal)}
-          real={real.caTotal}
-          sim={real.caTotal}
-          lines={[
-            { label: "Audio", value: fmtEUR(real.caAudio), pole: "audio" },
-            { label: "Vidéo", value: fmtEUR(real.caVideo), pole: "video" },
-            { label: "Pôle", value: fmtEUR(real.caPole) },
-          ]}
-        />
-        <SimMetricCard
-          title="CA Pipe brut"
-          value={fmtEUR(real.caPipeBrutTotal)}
-          real={real.caPipeBrutTotal}
-          sim={real.caPipeBrutTotal}
-          lines={[
-            { label: "Audio", value: fmtEUR(real.caPipeBrutAudio), pole: "audio" },
-            { label: "Vidéo", value: fmtEUR(real.caPipeBrutVideo), pole: "video" },
-          ]}
-        />
-        <SimMetricCard
-          title="Charges réelles YTD"
-          value={fmtEUR(chargesReelTotalSim)}
-          real={real.chReelTotal}
-          sim={chargesReelTotalSim}
-          lines={[
-            { label: "Audio", value: fmtEUR(chargesAudioTotal), pole: "audio" },
-            { label: "Vidéo", value: fmtEUR(chargesVideoTotal), pole: "video" },
-          ]}
-        />
-      </section>
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <SimEnvelopeCard
-          icon="🎙"
-          title="Enveloppe Audio"
-          pole="audio"
-          value={enveloppeAudio}
-          realValue={realEnvA}
-          ca={real.caAudio}
-          charges={chargesAudioTotal}
-        />
-        <SimEnvelopeCard
-          icon="🎬"
-          title="Enveloppe Vidéo"
-          pole="video"
-          value={enveloppeVideo}
-          realValue={realEnvV}
-          ca={real.caVideo}
-          charges={chargesVideoTotal}
-        />
-      </section>
-
-      <section>
-        <div className="rounded-lg border border-border bg-surface p-6">
-          <div className="mb-3 flex items-center gap-3">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              💡 Capacité d'investissement · Pôle Tournage
-            </h3>
-            <span
-              className="rounded px-2 py-0.5 text-xs font-medium"
-              style={{ backgroundColor: "rgba(232, 197, 71, 0.15)", color: "#E8C547" }}
-            >
-              Simulé
-            </span>
-          </div>
-          <p className={cn("text-4xl font-semibold", signClass(indicateur2))}>
-            {fmtEUR(indicateur2)}
-          </p>
-          {Math.round(indicateur2) !== Math.round(realInd2) && (
-            <p className="mt-1 text-xs" style={{ color: "#888" }}>
-              Réel : {fmtEUR(realInd2)}
-            </p>
-          )}
-          <div className="mt-6 border-t" style={{ borderColor: "#2A2A2A" }} />
-          <div className="mt-4 space-y-0">
-            <CalcRow op="" label="CA réel YTD" value={fmtEUR(real.caTotal)} />
-            <CalcRow op="−" label="CA objectif YTD" value={`− ${fmtEUR(caObjectifYTD)}`} />
-            <CalcRow op="=" label="Surplus" value={fmtEUR(surplus)} />
-            <CalcRow
-              op="×"
-              label={`% année écoulée (${(pctAnneeEcoulee * 100).toFixed(0)}%)`}
-              value={`× ${(pctAnneeEcoulee * 100).toFixed(0)}%`}
-            />
-            <CalcRow op="=" label="Surplus pondéré" value={fmtEUR(surplus * pctAnneeEcoulee)} />
-            <CalcRow op="+" label="CA objectif YTD" value={`+ ${fmtEUR(caObjectifYTD)}`} />
-            <CalcRow op="=" label="CA pondéré" value={fmtEUR(caPondere)} />
-            <CalcRow op="−" label="Charges YTD (réel + prov.)" value={`− ${fmtEUR(chargesYTD)}`} />
-            <CalcRow op="=" label="Résultat pondéré" value={fmtEUR(resPondere)} semantic={resPondere} />
-            <CalcRow
-              op="−"
-              label={`Réserve sécurité (${reserve.toFixed(0)}%)`}
-              value={montantReserve > 0 ? `− ${fmtEUR(montantReserve)}` : fmtEUR(0)}
-            />
-          </div>
-          <div className="mt-3 border-t" style={{ borderColor: "#2A2A2A" }} />
-          <div className="mt-3">
-            <CalcRow
-              op="="
-              label="Capacité d'investissement"
-              value={fmtEUR(indicateur2)}
-              semantic={indicateur2}
-              bold
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Bouton Réinitialiser fixe */}
-      <button
-        type="button"
-        onClick={handleReset}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2.5 text-sm font-medium text-foreground shadow-lg hover:bg-secondary"
+      {/* ── Sidebar gauche (paramètres) ─────────────────────────────── */}
+      <aside
+        className="sticky top-0 flex h-screen w-[360px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-border p-5"
+        style={{ backgroundColor: "#12121A" }}
       >
-        <RotateCcw className="h-4 w-4" />
-        Réinitialiser
-      </button>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Paramètres</h2>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"
+            title="Recharger depuis Airtable"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reset
+          </button>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Snapshot {real.dateSnapshot} · {ANNEE}
+        </p>
+
+        <hr className="border-border" />
+
+        {/* Charge simulable */}
+        <SidebarSection title="Charger simulable">
+          <p className="text-[11px] text-muted-foreground">
+            S'ajoute aux charges réelles dans tous les calculs. Non écrite dans Airtable.
+          </p>
+          <FieldLabel>Libellé</FieldLabel>
+          <Input
+            value={chgLabel}
+            onChange={(e) => setChgLabel(e.target.value)}
+            placeholder="ex. Achat matériel"
+            className="h-9 text-sm"
+          />
+          <FieldLabel>Montant</FieldLabel>
+          <SuffixedInput
+            type="number"
+            value={chgMontant}
+            onChange={(v) => setChgMontant(v)}
+            suffix="€"
+          />
+          <FieldLabel>Pôle</FieldLabel>
+          <select
+            value={chgPole}
+            onChange={(e) => setChgPole(e.target.value as ChargePole)}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="global">Global</option>
+            <option value="audio">Audio</option>
+            <option value="video">Vidéo</option>
+          </select>
+          {chgMontantNum > 0 && (
+            <div className="rounded-md border border-border bg-background/30 p-2 text-[11px] text-muted-foreground">
+              Imputation simulée :{" "}
+              <span style={{ color: "var(--pole-audio-text)" }}>Audio {fmtEUR(chgIsAudio)}</span>
+              {" · "}
+              <span style={{ color: "var(--pole-video-text)" }}>Vidéo {fmtEUR(chgIsVideo)}</span>
+            </div>
+          )}
+        </SidebarSection>
+
+        <hr className="border-border" />
+
+        {/* Paramètres annuels */}
+        <SidebarSection title="Paramètres annuels">
+          <NumberFieldRow
+            label="CA objectif Audio"
+            suffix="€"
+            pole="audio"
+            value={caObjAudio}
+            onChange={setCaObjAudio}
+            onApply={() => patchOne("ca_objectif_audio", caObjAudio)}
+          />
+          <NumberFieldRow
+            label="CA objectif Vidéo"
+            suffix="€"
+            pole="video"
+            value={caObjVideo}
+            onChange={setCaObjVideo}
+            onApply={() => patchOne("ca_objectif_video", caObjVideo)}
+          />
+          <ReadonlyFieldRow label="CA objectif Global (calculé)" value={fmtEUR(caObjGlobal)} />
+
+          <NumberFieldRow
+            label="% attribution Audio"
+            suffix="%"
+            pole="audio"
+            value={pctAudio}
+            onChange={setPctAudio}
+            onApply={() =>
+              patchMany({
+                pct_attribution_audio: pctAudio / 100,
+                pct_attribution_video: pctVideo / 100,
+              })
+            }
+          />
+          <ReadonlyFieldRow
+            label="% attribution Vidéo (déduit)"
+            value={`${pctVideo.toFixed(0)} %`}
+            pole="video"
+          />
+
+          <NumberFieldRow
+            label="Réserve de sécurité"
+            suffix="%"
+            value={reserve}
+            onChange={setReserve}
+            onApply={() => patchOne("reserve_securite", reserveDecimal)}
+          />
+        </SidebarSection>
+
+        {/* Garde-fous enveloppe */}
+        <SidebarSection title="Garde-fous enveloppe">
+          <div className="grid grid-cols-2 gap-2">
+            <NumberFieldRow
+              label="Plancher Audio"
+              suffix="€"
+              pole="audio"
+              value={plancherAudio}
+              onChange={setPlancherAudio}
+              onApply={() => patchOne("plancher_audio", plancherAudio)}
+              compact
+            />
+            <NumberFieldRow
+              label="Plafond Audio"
+              suffix="€"
+              pole="audio"
+              value={plafondAudio}
+              onChange={setPlafondAudio}
+              onApply={() => patchOne("plafond_audio", plafondAudio)}
+              compact
+            />
+            <NumberFieldRow
+              label="Plancher Vidéo"
+              suffix="€"
+              pole="video"
+              value={plancherVideo}
+              onChange={setPlancherVideo}
+              onApply={() => patchOne("plancher_video", plancherVideo)}
+              compact
+            />
+            <NumberFieldRow
+              label="Plafond Vidéo"
+              suffix="€"
+              pole="video"
+              value={plafondVideo}
+              onChange={setPlafondVideo}
+              onApply={() => patchOne("plafond_video", plafondVideo)}
+              compact
+            />
+          </div>
+        </SidebarSection>
+
+        {/* Taux de concrétisation */}
+        <SidebarSection title="Taux de concrétisation">
+          <NumberFieldRow
+            label="Taux Option"
+            suffix="%"
+            value={tauxOption}
+            onChange={setTauxOption}
+            onApply={() => patchOne("taux_concretisation_option", tauxOption / 100)}
+          />
+          <NumberFieldRow
+            label="Taux Confirmé"
+            suffix="%"
+            value={tauxConfirme}
+            onChange={setTauxConfirme}
+            onApply={() => patchOne("taux_concretisation_confirme", tauxConfirme / 100)}
+          />
+        </SidebarSection>
+
+        <div className="mt-auto pt-3">
+          <Button
+            onClick={applyAll}
+            className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+          >
+            Appliquer tous les paramètres
+          </Button>
+        </div>
+      </aside>
+
+      {/* ── Zone droite (résultats) ─────────────────────────────────── */}
+      <div className="flex-1 p-6 space-y-4">
+        <header className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold text-foreground">Simulateur · {ANNEE}</h1>
+          <span
+            className="rounded px-2 py-0.5 text-xs font-medium"
+            style={{ backgroundColor: "rgba(232, 197, 71, 0.15)", color: "#E8C547" }}
+          >
+            Simulation
+          </span>
+        </header>
+
+        {/* Saisonnalité avancée */}
+        <div
+          className="rounded-lg border border-border p-4"
+          style={{ backgroundColor: "#181820" }}
+        >
+          <button
+            type="button"
+            onClick={() => setSeasonOpen((o) => !o)}
+            className="flex w-full items-center justify-between text-sm font-medium text-foreground"
+          >
+            <div className="flex items-center gap-2">
+              <ChevronDown
+                className={cn("h-4 w-4 transition-transform", seasonOpen && "rotate-180")}
+              />
+              <span>Saisonnalité avancée</span>
+              <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                {moisConfigures} mois
+              </span>
+            </div>
+          </button>
+          {seasonOpen && (
+            <div className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SeasonSimGrid
+                  title="Audio"
+                  pole="audio"
+                  values={saisonAudio}
+                  onChange={(i, v) =>
+                    setSaisonAudio((p) => p.map((x, idx) => (idx === i ? v : x)))
+                  }
+                  total={totalSaisonAudio}
+                />
+                <SeasonSimGrid
+                  title="Vidéo"
+                  pole="video"
+                  values={saisonVideo}
+                  onChange={(i, v) =>
+                    setSaisonVideo((p) => p.map((x, idx) => (idx === i ? v : x)))
+                  }
+                  total={totalSaisonVideo}
+                  onCopyFrom={() => setSaisonVideo([...saisonAudio])}
+                />
+              </div>
+              <div className="flex justify-center">
+                <Button
+                  onClick={applySaisonnalite}
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                >
+                  Appliquer la saisonnalité
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Ligne 1 — métriques */}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <SimMetricCard
+            title="État réel · YTD"
+            value={fmtEUR(real.caTotal)}
+            real={real.caTotal}
+            sim={real.caTotal}
+            lines={[
+              { label: "Audio", value: fmtEUR(real.caAudio), pole: "audio" },
+              { label: "Vidéo", value: fmtEUR(real.caVideo), pole: "video" },
+              { label: "Pôle", value: fmtEUR(real.caPole) },
+            ]}
+          />
+          <SimMetricCard
+            title="Avancement · YTD"
+            value={fmtEUR(chargesReelTotalSim)}
+            real={real.chReelTotal}
+            sim={chargesReelTotalSim}
+            lines={[
+              { label: "Charges Audio", value: fmtEUR(chargesAudioTotal), pole: "audio" },
+              { label: "Charges Vidéo", value: fmtEUR(chargesVideoTotal), pole: "video" },
+            ]}
+          />
+          <SimMetricCard
+            title="Pipeline · Global"
+            value={fmtEUR(real.caPipeBrutTotal)}
+            real={real.caPipeBrutTotal}
+            sim={real.caPipeBrutTotal}
+            lines={[
+              { label: "Pipe Audio", value: fmtEUR(real.caPipeBrutAudio), pole: "audio" },
+              { label: "Pipe Vidéo", value: fmtEUR(real.caPipeBrutVideo), pole: "video" },
+            ]}
+          />
+        </section>
+
+        {/* Ligne 2 — enveloppes pôles */}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <SimEnvelopeCard
+            icon="🎙"
+            title="Enveloppe Audio"
+            pole="audio"
+            value={enveloppeAudio}
+            realValue={realEnvA}
+            ca={real.caAudio}
+            charges={chargesAudioTotal}
+          />
+          <SimEnvelopeCard
+            icon="🎬"
+            title="Enveloppe Vidéo"
+            pole="video"
+            value={enveloppeVideo}
+            realValue={realEnvV}
+            ca={real.caVideo}
+            charges={chargesVideoTotal}
+          />
+        </section>
+
+        {/* Ligne 3 — capacité d'investissement */}
+        <section>
+          <div className="rounded-lg border border-border bg-surface p-5">
+            <div className="mb-3 flex items-center gap-3">
+              <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
+                💡 Capacité d'investissement · Pôle Tournage
+              </h3>
+              <span
+                className="rounded px-1.5 py-0.5 text-[10px] font-medium"
+                style={{ backgroundColor: "rgba(232, 197, 71, 0.15)", color: "#E8C547" }}
+              >
+                Simulé
+              </span>
+            </div>
+            <p className={cn("text-3xl font-semibold", signClass(indicateur2))}>
+              {fmtEUR(indicateur2)}
+            </p>
+            {Math.round(indicateur2) !== Math.round(realInd2) && (
+              <p className="mt-1 text-xs" style={{ color: "#888" }}>
+                Réel : {fmtEUR(realInd2)}
+              </p>
+            )}
+            <div className="mt-5 border-t border-border" />
+            <div className="mt-4 space-y-0">
+              <CalcRow op="" label="CA réel YTD" value={fmtEUR(real.caTotal)} />
+              <CalcRow op="−" label="CA objectif YTD" value={`− ${fmtEUR(caObjectifYTD)}`} />
+              <CalcRow op="=" label="Surplus" value={fmtEUR(surplus)} />
+              <CalcRow
+                op="×"
+                label={`% année écoulée (${(pctAnneeEcoulee * 100).toFixed(0)}%)`}
+                value={`× ${(pctAnneeEcoulee * 100).toFixed(0)}%`}
+              />
+              <CalcRow op="=" label="Surplus pondéré" value={fmtEUR(surplus * pctAnneeEcoulee)} />
+              <CalcRow op="+" label="CA objectif YTD" value={`+ ${fmtEUR(caObjectifYTD)}`} />
+              <CalcRow op="=" label="CA pondéré" value={fmtEUR(caPondere)} />
+              <CalcRow op="−" label="Charges YTD (réel + prov.)" value={`− ${fmtEUR(chargesYTD)}`} />
+              <CalcRow op="=" label="Résultat pondéré" value={fmtEUR(resPondere)} semantic={resPondere} />
+              <CalcRow
+                op="−"
+                label={`Réserve sécurité (${reserve.toFixed(0)}%)`}
+                value={montantReserve > 0 ? `− ${fmtEUR(montantReserve)}` : fmtEUR(0)}
+              />
+            </div>
+            <div className="mt-3 border-t border-border" />
+            <div className="mt-3">
+              <CalcRow
+                op="="
+                label="Capacité d'investissement"
+                value={fmtEUR(indicateur2)}
+                semantic={indicateur2}
+                bold
+              />
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
 
-// ── Reusable simulator-specific components ───────────────────────────────
+// ── Sidebar helpers ────────────────────────────────────────────────────
+
+function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h4>
+      {children}
+    </div>
+  );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+
+function SuffixedInput({
+  value,
+  onChange,
+  suffix,
+  type = "text",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  suffix: string;
+  type?: string;
+}) {
+  return (
+    <div className="relative">
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        className="h-9 pr-7 text-sm"
+      />
+      <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground">
+        {suffix}
+      </span>
+    </div>
+  );
+}
 
 const poleStyles = (pole?: Pole) => ({
   bg:
@@ -751,33 +767,29 @@ const poleStyles = (pole?: Pole) => ({
         : undefined,
 });
 
-function SliderField({
+function NumberFieldRow({
   label,
   suffix,
   pole,
   value,
-  min,
-  max,
-  step,
   onChange,
   onApply,
+  compact,
 }: {
   label: string;
   suffix: string;
   pole?: Pole;
   value: number;
-  min: number;
-  max: number;
-  step: number;
   onChange: (v: number) => void;
   onApply: () => void;
+  compact?: boolean;
 }) {
   const { bg, text } = poleStyles(pole);
   return (
-    <div className="rounded-md p-2" style={bg ? { backgroundColor: bg } : undefined}>
-      <div className="mb-1.5 flex items-baseline justify-between gap-2">
+    <div className="rounded-md p-1.5" style={bg ? { backgroundColor: bg } : undefined}>
+      <div className="mb-1 flex items-baseline justify-between gap-2">
         <span
-          className="text-xs uppercase tracking-wide"
+          className={cn("uppercase tracking-wide", compact ? "text-[10px]" : "text-[11px]")}
           style={{ color: text ?? "var(--color-muted-foreground)" }}
         >
           {label}
@@ -791,73 +803,13 @@ function SliderField({
           <ArrowUpRight className="h-3.5 w-3.5" />
         </button>
       </div>
-      <div className="flex items-center gap-3">
-        <Slider
-          value={[value]}
-          min={min}
-          max={max}
-          step={step}
-          onValueChange={(v) => onChange(v[0] ?? 0)}
-          className="flex-1"
-        />
-        <div className="relative w-28">
-          <Input
-            type="number"
-            value={value}
-            onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-            className="pr-7 text-sm"
-          />
-          <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground">
-            {suffix}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NumberField({
-  label,
-  suffix,
-  pole,
-  value,
-  min,
-  onChange,
-  onApply,
-}: {
-  label: string;
-  suffix: string;
-  pole?: Pole;
-  value: number;
-  min: number;
-  onChange: (v: number) => void;
-  onApply: () => void;
-}) {
-  const { bg, text } = poleStyles(pole);
-  return (
-    <div className="rounded-md p-2" style={bg ? { backgroundColor: bg } : undefined}>
-      <div className="mb-1.5 flex items-baseline justify-between gap-2">
-        <span
-          className="text-xs uppercase tracking-wide"
-          style={{ color: text ?? "var(--color-muted-foreground)" }}
-        >
-          {label}
-        </span>
-        <button
-          type="button"
-          onClick={onApply}
-          className="text-muted-foreground hover:text-accent"
-        >
-          <ArrowUpRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
       <div className="relative">
         <Input
           type="number"
-          min={min}
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-          className="pr-7 text-sm"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          className="h-9 pr-7 text-sm"
         />
         <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground">
           {suffix}
@@ -867,7 +819,7 @@ function NumberField({
   );
 }
 
-function ReadonlyField({
+function ReadonlyFieldRow({
   label,
   value,
   pole,
@@ -878,14 +830,14 @@ function ReadonlyField({
 }) {
   const { bg, text } = poleStyles(pole);
   return (
-    <div className="rounded-md p-2" style={bg ? { backgroundColor: bg } : undefined}>
+    <div className="rounded-md p-1.5" style={bg ? { backgroundColor: bg } : undefined}>
       <span
-        className="mb-1.5 block text-xs uppercase tracking-wide"
+        className="mb-1 block text-[11px] uppercase tracking-wide"
         style={{ color: text ?? "var(--color-muted-foreground)" }}
       >
         {label}
       </span>
-      <div className="flex h-9 items-center rounded-md border border-border bg-background/30 px-3 text-sm text-foreground">
+      <div className="flex h-9 items-center rounded-md border border-border bg-background/30 px-3 text-sm text-muted-foreground">
         {value}
       </div>
     </div>
@@ -950,6 +902,7 @@ function SeasonSimGrid({
                     type="number"
                     value={values[i] ?? 0}
                     onChange={(e) => onChange(i, parseFloat(e.target.value) || 0)}
+                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
                     className="pr-6 text-sm"
                     style={{ backgroundColor: cellBg }}
                   />
@@ -984,7 +937,7 @@ function SeasonSimGrid({
   );
 }
 
-// ── Result cards (clones with sim badge & real reference) ───────────────
+// ── Result cards ───────────────────────────────────────────────────────
 
 function SimMetricCard({
   title,
@@ -1066,7 +1019,7 @@ function SimEnvelopeCard({
   const text = pole === "audio" ? "var(--pole-audio-text)" : "var(--pole-video-text)";
   return (
     <div
-      className="rounded-lg border border-border p-6"
+      className="rounded-lg border border-border p-5"
       style={{
         backgroundColor: pole === "audio" ? "var(--pole-audio-bg)" : "var(--pole-video-bg)",
       }}
@@ -1131,7 +1084,7 @@ function CalcRow({
       )}
       style={isTotal ? { backgroundColor: "rgba(255, 255, 255, 0.04)" } : undefined}
     >
-      <span style={{ color: "#555" }}>{op}</span>
+      <span className="font-mono" style={{ color: "#555" }}>{op}</span>
       <span style={{ color: labelColor }}>{label}</span>
       <span className="tabular-nums" style={{ color: valueColor }}>
         {value}
