@@ -1,20 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useAirtable, type AirtableRecord } from "@/hooks/useAirtable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-  LineChart,
-  Line,
-} from "recharts";
+import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Tableau de bord — Pôle Tournage" }] }),
@@ -43,6 +32,7 @@ const C_NEG = "#E05252";
 
 function DashboardPage() {
   const moisCourant = new Date().getMonth() + 1;
+  const [graphScope, setGraphScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
 
   const metriquesQ = useAirtable("tblNznOYtuFDUI3df", {
     maxRecords: 1,
@@ -190,65 +180,6 @@ function DashboardPage() {
 
   const dateSnapshot = str(metriques.date_snapshot) || "—";
 
-  // Données graphiques (CA mensuel par revenus + objectif mensuel)
-  const monthlyChartData = useMemo(() => {
-    const monthsLabels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
-    const buckets = monthsLabels.map((m, i) => ({
-      mois: m,
-      moisNum: i + 1,
-      ca: 0,
-      caAudio: 0,
-      caVideo: 0,
-      objectif: 0,
-      objectifAudio: 0,
-      objectifVideo: 0,
-    }));
-    for (const r of revenus) {
-      const dateStr = str(r.fields.date_facturation);
-      if (!dateStr) continue;
-      const m = new Date(dateStr).getMonth();
-      if (m < 0 || m > 11) continue;
-      const montant = num(r.fields.montant_ht);
-      const pole = str(r.fields.pole).toLowerCase();
-      buckets[m].ca += montant;
-      if (pole.includes("audio") || pole.includes("son")) buckets[m].caAudio += montant;
-      else if (pole.includes("video") || pole.includes("vidéo") || pole.includes("image"))
-        buckets[m].caVideo += montant;
-    }
-    const objAudio = num(objectifs.ca_objectif_audio);
-    const objVideo = num(objectifs.ca_objectif_video);
-    for (let i = 0; i < 12; i++) {
-      const sa = num(objectifs[`saisonnalite_audio_${String(i + 1).padStart(2, "0")}`]);
-      const sv = num(objectifs[`saisonnalite_video_${String(i + 1).padStart(2, "0")}`]);
-      buckets[i].objectifAudio = objAudio * sa;
-      buckets[i].objectifVideo = objVideo * sv;
-      buckets[i].objectif = buckets[i].objectifAudio + buckets[i].objectifVideo;
-    }
-    return buckets;
-  }, [revenus, objectifs]);
-
-  // Cumul
-  const cumulChartData = useMemo(() => {
-    let cumCa = 0, cumCaA = 0, cumCaV = 0, cumObj = 0, cumObjA = 0, cumObjV = 0;
-    return monthlyChartData.map((b) => {
-      cumCa += b.ca;
-      cumCaA += b.caAudio;
-      cumCaV += b.caVideo;
-      cumObj += b.objectif;
-      cumObjA += b.objectifAudio;
-      cumObjV += b.objectifVideo;
-      return {
-        mois: b.mois,
-        ca: cumCa,
-        caAudio: cumCaA,
-        caVideo: cumCaV,
-        objectif: cumObj,
-        objectifAudio: cumObjA,
-        objectifVideo: cumObjV,
-      };
-    });
-  }, [monthlyChartData]);
-
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4">
@@ -294,12 +225,7 @@ function DashboardPage() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Réalisation objectif YTD
             </p>
-            <p
-              className={cn(
-                "mt-1 text-3xl font-semibold",
-                pctRealisationYTD >= 1 ? "text-positive" : "text-destructive",
-              )}
-            >
+            <p className="mt-1 text-3xl font-semibold text-foreground">
               {(pctRealisationYTD * 100).toFixed(0)}%
             </p>
             <div className="mt-2 h-0.5 w-full rounded bg-border overflow-hidden">
@@ -320,7 +246,7 @@ function DashboardPage() {
             </p>
             <p className={cn("mt-1 text-3xl font-semibold", signClass(ecartPosition))}>
               {(ecartPosition * 100 >= 0 ? "+" : "")}
-              {(ecartPosition * 100).toFixed(1)} pts
+              {(ecartPosition * 100).toFixed(0)}%
             </p>
             <div className="mt-2 flex justify-between text-xs text-muted-foreground">
               <span>% année écoulée : {(pctAnneeEcoulee * 100).toFixed(0)}%</span>
@@ -431,17 +357,32 @@ function DashboardPage() {
           </p>
         </BaseCard>
 
-        <ChartCard
-          label="CA mensuel vs Objectif"
-          loading={loading}
-          data={monthlyChartData}
-          type="bar"
-        />
-        <ChartCard
-          label="Cumul CA vs Objectif"
-          loading={loading}
-          data={cumulChartData}
-          type="line"
+        <DashboardCharts
+          scope={graphScope}
+          revenus={revenus}
+          chargesReelles={chargesReelles}
+          objectifs={objectifs}
+          pctAudio={pctAudio}
+          pctVideo={pctVideo}
+          toggleNode={
+            <div className="flex gap-1">
+              {(["Global", "Audio", "Vidéo"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setGraphScope(s)}
+                  className={cn(
+                    "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                    graphScope === s
+                      ? "border-border bg-muted text-foreground"
+                      : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          }
         />
       </section>
     </div>
@@ -725,83 +666,3 @@ function CapaciteCard({
   );
 }
 
-// ── Chart card ────────────────────────────────────────────────────────────
-type ChartFilter = "global" | "audio" | "video";
-
-function ChartCard({
-  label,
-  loading,
-  data,
-  type,
-}: {
-  label: string;
-  loading: boolean;
-  data: Array<Record<string, unknown>>;
-  type: "bar" | "line";
-}) {
-  const [filter, setFilter] = useState<ChartFilter>("global");
-
-  const caKey = filter === "global" ? "ca" : filter === "audio" ? "caAudio" : "caVideo";
-  const objKey =
-    filter === "global" ? "objectif" : filter === "audio" ? "objectifAudio" : "objectifVideo";
-  const caColor = filter === "audio" ? C_AUDIO : filter === "video" ? C_VIDEO : C_ACCENT;
-
-  return (
-    <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-        <div className="flex gap-1 rounded border border-border p-0.5 text-xs">
-          {(["global", "audio", "video"] as ChartFilter[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "rounded px-2 py-0.5 capitalize transition-colors",
-                filter === f
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {f === "global" ? "Global" : f === "audio" ? "Audio" : "Vidéo"}
-            </button>
-          ))}
-        </div>
-      </div>
-      {loading ? (
-        <Skeleton className="mt-4 h-56 w-full" />
-      ) : (
-        <div className="mt-4 h-56 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            {type === "bar" ? (
-              <BarChart data={data}>
-                <CartesianGrid stroke="#2A2A2A" vertical={false} />
-                <XAxis dataKey="mois" stroke="#888" fontSize={11} />
-                <YAxis stroke="#888" fontSize={11} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
-                <Tooltip
-                  contentStyle={{ background: "#1E1E1E", border: "1px solid #2A2A2A", fontSize: 12 }}
-                  formatter={(v: number) => fmtEUR(v)}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey={caKey} name="CA réel" fill={caColor} radius={[2, 2, 0, 0]} />
-                <Bar dataKey={objKey} name="Objectif" fill="#555" radius={[2, 2, 0, 0]} />
-              </BarChart>
-            ) : (
-              <LineChart data={data}>
-                <CartesianGrid stroke="#2A2A2A" vertical={false} />
-                <XAxis dataKey="mois" stroke="#888" fontSize={11} />
-                <YAxis stroke="#888" fontSize={11} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
-                <Tooltip
-                  contentStyle={{ background: "#1E1E1E", border: "1px solid #2A2A2A", fontSize: 12 }}
-                  formatter={(v: number) => fmtEUR(v)}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Line type="monotone" dataKey={caKey} name="CA cumulé" stroke={caColor} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey={objKey} name="Objectif cumulé" stroke="#888" strokeWidth={2} strokeDasharray="4 4" dot={false} />
-              </LineChart>
-            )}
-          </ResponsiveContainer>
-        </div>
-      )}
-    </div>
-  );
-}
