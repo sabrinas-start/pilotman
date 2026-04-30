@@ -315,7 +315,7 @@ function DashboardPage() {
             </p>
             <p className={cn("mt-1 text-3xl font-semibold", signClass(ecartPosition))}>
               {(ecartPosition * 100 >= 0 ? "+" : "")}
-              {(ecartPosition * 100).toFixed(1)} pts
+              {(ecartPosition * 100).toFixed(0)}%
             </p>
             <div className="mt-2 flex justify-between text-xs text-muted-foreground">
               <span>% année écoulée : {(pctAnneeEcoulee * 100).toFixed(0)}%</span>
