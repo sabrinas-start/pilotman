@@ -428,17 +428,32 @@ function DashboardPage() {
           </p>
         </BaseCard>
 
-        <ChartCard
-          label="CA mensuel vs Objectif"
-          loading={loading}
-          data={monthlyChartData}
-          type="bar"
-        />
-        <ChartCard
-          label="Cumul CA vs Objectif"
-          loading={loading}
-          data={cumulChartData}
-          type="line"
+        <DashboardCharts
+          scope={graphScope}
+          revenus={revenus}
+          chargesReelles={chargesReelles}
+          objectifs={objectifs}
+          pctAudio={pctAudio}
+          pctVideo={pctVideo}
+          toggleNode={
+            <div className="flex gap-1">
+              {(["Global", "Audio", "Vidéo"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setGraphScope(s)}
+                  className={cn(
+                    "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                    graphScope === s
+                      ? "border-border bg-muted text-foreground"
+                      : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          }
         />
       </section>
     </div>
