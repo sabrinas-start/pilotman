@@ -34,9 +34,12 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4" style={{ background: "#161616" }}>
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            La Puce à l'Oreille — <span style={{ color: "#E8C547" }}>Pilotage</span>
+          <h1 className="text-xl font-semibold tracking-tight text-white">
+            La Puce à l'Oreille
           </h1>
+          <div className="mt-1 text-xl font-semibold tracking-tight" style={{ color: "#E8C547" }}>
+            Pilotage
+          </div>
         </div>
         <form
           onSubmit={onSubmit}
