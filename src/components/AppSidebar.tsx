@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Settings,
@@ -7,14 +7,16 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
+import { useAuth, type Profil } from "@/contexts/AuthContext";
 
 const items = [
-  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/simulateur", label: "Simulateur", icon: FlaskConical },
-  { to: "/salaries", label: "Salariés", icon: Users },
-  { to: "/parametres", label: "Paramètres", icon: Settings },
-  { to: "/droits", label: "Droits & profils", icon: ShieldCheck },
+  { to: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard, adminOnly: false },
+  { to: "/simulateur", label: "Simulateur", icon: FlaskConical, adminOnly: true },
+  { to: "/salaries", label: "Salariés", icon: Users, adminOnly: true },
+  { to: "/parametres", label: "Paramètres", icon: Settings, adminOnly: true },
+  { to: "/droits", label: "Droits & profils", icon: ShieldCheck, adminOnly: true },
 ] as const;
 
 interface AppSidebarProps {
@@ -24,6 +26,17 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const profil: Profil | undefined = user?.profil;
+  const isAdmin = profil === "admin";
+
+  const handleLogout = () => {
+    logout();
+    navigate({ to: "/login" });
+  };
+
+  const visibleItems = items.filter((it) => !it.adminOnly || isAdmin);
 
   return (
     <aside
@@ -42,7 +55,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         )}
       </div>
       <nav className={["flex-1 space-y-1", collapsed ? "px-2" : "px-3"].join(" ")}>
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const active = pathname === item.to || pathname.startsWith(item.to + "/");
           const Icon = item.icon;
           return (
@@ -64,6 +77,34 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           );
         })}
       </nav>
+
+      {user && !collapsed && (
+        <div className="border-t border-border px-4 py-3">
+          <p className="truncate text-sm font-medium text-foreground">{user.nom_affiche}</p>
+          <p className="text-xs text-muted-foreground capitalize">{user.profil}</p>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-foreground transition-colors"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Déconnexion
+          </button>
+        </div>
+      )}
+      {user && collapsed && (
+        <div className="border-t border-border py-2 flex justify-center">
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Déconnexion"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <div
         className={[
           "flex items-center border-t border-border py-3",
