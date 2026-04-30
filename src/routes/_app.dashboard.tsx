@@ -304,9 +304,8 @@ function DashboardPage() {
           )}
         </div>
       </section>
-
-      </section>
       )}
+
 
       {/* BLOC 3 — Pôles Audio / Vidéo */}
       <section className={cn("grid grid-cols-1 gap-3", !isPoleOnly && "md:grid-cols-2")}>
