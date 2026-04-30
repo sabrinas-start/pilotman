@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useAirtable, type AirtableRecord } from "@/hooks/useAirtable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
