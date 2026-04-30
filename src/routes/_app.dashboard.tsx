@@ -211,7 +211,8 @@ function DashboardPage() {
         </div>
       )}
 
-      {/* BLOC 1 — 3 cards */}
+      {/* BLOC 1 — 3 cards (masqué pour les pôles) */}
+      {!isPoleOnly && (
       <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {/* Card 1 — État réel */}
         <BaseCard loading={loading} label="État réel · YTD">
@@ -278,8 +279,10 @@ function DashboardPage() {
           </ul>
         </BaseCard>
       </section>
+      )}
 
-      {/* BLOC 2 — Capacité d'investissement pleine largeur */}
+      {/* BLOC 2 — Capacité d'investissement (masqué pour les pôles) */}
+      {!isPoleOnly && (
       <section>
         <div className="rounded-lg border border-border bg-surface p-6">
           {loading ? (
@@ -302,8 +305,12 @@ function DashboardPage() {
         </div>
       </section>
 
+      </section>
+      )}
+
       {/* BLOC 3 — Pôles Audio / Vidéo */}
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <section className={cn("grid grid-cols-1 gap-3", !isPoleOnly && "md:grid-cols-2")}>
+        {(profil !== "video") && (
         <PoleCard
           loading={loading}
           color={C_AUDIO}
@@ -318,6 +325,8 @@ function DashboardPage() {
           pipePon={pipePonAudio}
           pipeRetenu={pipeRetenuAudio}
         />
+        )}
+        {(profil !== "audio") && (
         <PoleCard
           loading={loading}
           color={C_VIDEO}
@@ -332,9 +341,11 @@ function DashboardPage() {
           pipePon={pipePonVideo}
           pipeRetenu={pipeRetenuVideo}
         />
+        )}
       </section>
 
-      {/* BLOC 4 — Projection + graphiques */}
+      {/* BLOC 4 — Projection + graphiques (masqué pour les pôles) */}
+      {!isPoleOnly && (
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr_1fr]">
         <BaseCard loading={loading} label="Projection fin d'année">
           <p className="text-xl font-semibold text-foreground whitespace-nowrap">{fmtEUR(caProjecte)}</p>
@@ -393,6 +404,7 @@ function DashboardPage() {
           }
         />
       </section>
+      )}
     </div>
   );
 }
