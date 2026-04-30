@@ -22,10 +22,15 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export const Route = createFileRoute("/_app/salaries")({
   head: () => ({ meta: [{ title: "Salariés — Pôle Tournage" }] }),
-  component: SalariesPage,
+  component: () => (
+    <ProtectedRoute allowed={["admin"]}>
+      <SalariesPage />
+    </ProtectedRoute>
+  ),
 });
 
 const ANNEE = 2026;

@@ -4,6 +4,7 @@ import { useAirtable, type AirtableRecord } from "@/hooks/useAirtable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Tableau de bord — Pôle Tournage" }] }),
@@ -31,6 +32,9 @@ const C_POS = "#4CAF7D";
 const C_NEG = "#E05252";
 
 function DashboardPage() {
+  const { user } = useAuth();
+  const profil = user?.profil;
+  const isPoleOnly = profil === "audio" || profil === "video";
   const moisCourant = new Date().getMonth() + 1;
   const [graphScope, setGraphScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
 
@@ -186,7 +190,11 @@ function DashboardPage() {
       {/* En-tête */}
       <header className="border-b border-border pb-4">
         <h2 className="text-2xl font-semibold text-foreground">
-          Tableau de bord · Pôle Tournage
+          {profil === "audio"
+            ? "Pôle Audio — Tableau de bord"
+            : profil === "video"
+              ? "Pôle Vidéo — Tableau de bord"
+              : "Tableau de bord · Pôle Tournage"}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Snapshot au {dateSnapshot} · Données CA au {dateSnapshot}
@@ -203,7 +211,8 @@ function DashboardPage() {
         </div>
       )}
 
-      {/* BLOC 1 — 3 cards */}
+      {/* BLOC 1 — 3 cards (masqué pour les pôles) */}
+      {!isPoleOnly && (
       <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {/* Card 1 — État réel */}
         <BaseCard loading={loading} label="État réel · YTD">
@@ -270,8 +279,10 @@ function DashboardPage() {
           </ul>
         </BaseCard>
       </section>
+      )}
 
-      {/* BLOC 2 — Capacité d'investissement pleine largeur */}
+      {/* BLOC 2 — Capacité d'investissement (masqué pour les pôles) */}
+      {!isPoleOnly && (
       <section>
         <div className="rounded-lg border border-border bg-surface p-6">
           {loading ? (
@@ -293,9 +304,12 @@ function DashboardPage() {
           )}
         </div>
       </section>
+      )}
+
 
       {/* BLOC 3 — Pôles Audio / Vidéo */}
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <section className={cn("grid grid-cols-1 gap-3", !isPoleOnly && "md:grid-cols-2")}>
+        {(profil !== "video") && (
         <PoleCard
           loading={loading}
           color={C_AUDIO}
@@ -310,6 +324,8 @@ function DashboardPage() {
           pipePon={pipePonAudio}
           pipeRetenu={pipeRetenuAudio}
         />
+        )}
+        {(profil !== "audio") && (
         <PoleCard
           loading={loading}
           color={C_VIDEO}
@@ -324,9 +340,11 @@ function DashboardPage() {
           pipePon={pipePonVideo}
           pipeRetenu={pipeRetenuVideo}
         />
+        )}
       </section>
 
-      {/* BLOC 4 — Projection + graphiques */}
+      {/* BLOC 4 — Projection + graphiques (masqué pour les pôles) */}
+      {!isPoleOnly && (
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr_1fr]">
         <BaseCard loading={loading} label="Projection fin d'année">
           <p className="text-xl font-semibold text-foreground whitespace-nowrap">{fmtEUR(caProjecte)}</p>
@@ -385,6 +403,7 @@ function DashboardPage() {
           }
         />
       </section>
+      )}
     </div>
   );
 }

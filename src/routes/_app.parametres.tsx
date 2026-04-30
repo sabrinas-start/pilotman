@@ -6,10 +6,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export const Route = createFileRoute("/_app/parametres")({
   head: () => ({ meta: [{ title: "Paramètres — Pôle Tournage" }] }),
-  component: ParametresPage,
+  component: () => (
+    <ProtectedRoute allowed={["admin"]}>
+      <ParametresPage />
+    </ProtectedRoute>
+  ),
 });
 
 const ANNEE = 2026;
