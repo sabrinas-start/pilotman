@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { RotateCcw, ChevronDown, Trash2, Plus } from "lucide-react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export const Route = createFileRoute("/_app/simulateur")({
   head: () => ({ meta: [{ title: "Simulateur — Pôle Tournage" }] }),
