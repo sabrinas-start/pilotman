@@ -327,18 +327,18 @@ function DashboardPage() {
       </section>
 
       {/* BLOC 4 — Projection + graphiques */}
-      <section className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1.4fr_1.4fr]">
+      <section className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr_1fr]">
         <BaseCard loading={loading} label="Projection fin d'année">
-          <p className="text-3xl font-semibold text-foreground">{fmtEUR(caProjecte)}</p>
+          <p className="text-xl font-semibold text-foreground whitespace-nowrap">{fmtEUR(caProjecte)}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             CA réel YTD + objectifs mois restants
           </p>
-          <ul className="mt-4 space-y-1.5 text-sm">
+          <ul className="mt-4 space-y-1.5 text-sm whitespace-nowrap">
             <DetailRow label="CA réel YTD" value={fmtEUR(caTotal)} />
             <DetailRow label="+ Objectifs mois restants" value={fmtEUR(objectifsMoisRestants)} />
           </ul>
           <hr className="my-3 border-border" />
-          <ul className="space-y-1.5 text-sm">
+          <ul className="space-y-1.5 text-sm whitespace-nowrap">
             <DetailRow label="Objectif annuel" value={fmtEUR(caObjectifGlobal)} />
             <DetailRow
               label="Écart projeté"
