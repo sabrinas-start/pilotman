@@ -44,6 +44,7 @@ const C_NEG = "#E05252";
 
 function DashboardPage() {
   const moisCourant = new Date().getMonth() + 1;
+  const [graphScope, setGraphScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
 
   const metriquesQ = useAirtable("tblNznOYtuFDUI3df", {
     maxRecords: 1,
