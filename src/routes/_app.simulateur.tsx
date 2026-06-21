@@ -1354,14 +1354,15 @@ function SimulateurPage() {
         </section>
 
         {/* Enveloppes (mode normal seulement) */}
-        {!anneBlanche && (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <ComparisonCard
-              title="🎙 Enveloppe Audio"
-              reel={kpisBaseline.enveloppeAudio}
-              simule={kpisSimule.enveloppeAudio}
-              pole="audio"
-            >
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <ComparisonCard
+            title="🎙 Enveloppe Audio"
+            reel={kpisBaseline.enveloppeAudio}
+            simule={kpisSimule.enveloppeAudio}
+            pole="audio"
+            anneBlanche={anneBlanche}
+          >
+            {!anneBlanche && (
               <div className="mt-3 border-t border-border pt-2">
                 <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <span></span>
@@ -1384,13 +1385,16 @@ function SimulateurPage() {
                   simule={sumSal * pAudio}
                 />
               </div>
-            </ComparisonCard>
-            <ComparisonCard
-              title="🎬 Enveloppe Vidéo"
-              reel={kpisBaseline.enveloppeVideo}
-              simule={kpisSimule.enveloppeVideo}
-              pole="video"
-            >
+            )}
+          </ComparisonCard>
+          <ComparisonCard
+            title="🎬 Enveloppe Vidéo"
+            reel={kpisBaseline.enveloppeVideo}
+            simule={kpisSimule.enveloppeVideo}
+            pole="video"
+            anneBlanche={anneBlanche}
+          >
+            {!anneBlanche && (
               <div className="mt-3 border-t border-border pt-2">
                 <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <span></span>
@@ -1413,9 +1417,9 @@ function SimulateurPage() {
                   simule={sumSal * pVideo}
                 />
               </div>
-            </ComparisonCard>
-          </section>
-        )}
+            )}
+          </ComparisonCard>
+        </section>
       </div>
     </div>
   );
