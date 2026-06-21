@@ -277,6 +277,7 @@ function SimulateurPage() {
   const [saisonAudio, setSaisonAudio] = useState<number[]>(Array(12).fill(0));
   const [saisonVideo, setSaisonVideo] = useState<number[]>(Array(12).fill(0));
   const [simCharges, setSimCharges] = useState<SimCharge[]>([]);
+  const [simRevenus, setSimRevenus] = useState<SimCharge[]>([]);
   const [chargesFixesEdit, setChargesFixesEdit] =
     useState<Record<string, { montant: number; taux: number }>>({});
   const [openGroupes, setOpenGroupes] = useState<Record<string, boolean>>({});
@@ -306,6 +307,7 @@ function SimulateurPage() {
     setSaisonAudio(real.saisonAudio.map((v) => v * 100));
     setSaisonVideo(real.saisonVideo.map((v) => v * 100));
     setSimCharges([]);
+    setSimRevenus([]);
   };
 
   useEffect(() => {
@@ -413,10 +415,22 @@ function SimulateurPage() {
   const totalSaisonAudio = saisonAudio.reduce((s, v) => s + v, 0);
   const totalSaisonVideo = saisonVideo.reduce((s, v) => s + v, 0);
 
-  // CA réel (dépend de anneBlanche)
-  const caReelAudio = anneBlanche ? 0 : real.caAudio;
-  const caReelVideo = anneBlanche ? 0 : real.caVideo;
-  const caReelTotal = anneBlanche ? 0 : real.caTotal;
+  // Revenus simulés (ajoutés au CA réel) — calculés ici pour pouvoir abonder caReel*
+  const _simRevenusAudio = simRevenus.reduce(
+    (s, c) =>
+      s + (c.pole === "audio" ? c.montant : c.pole === "global" ? c.montant * pAudio : 0),
+    0,
+  );
+  const _simRevenusVideo = simRevenus.reduce(
+    (s, c) =>
+      s + (c.pole === "video" ? c.montant : c.pole === "global" ? c.montant * pVideo : 0),
+    0,
+  );
+
+  // CA réel (dépend de anneBlanche) — abondé des revenus simulés
+  const caReelAudio = (anneBlanche ? 0 : real.caAudio) + _simRevenusAudio;
+  const caReelVideo = (anneBlanche ? 0 : real.caVideo) + _simRevenusVideo;
+  const caReelTotal = (anneBlanche ? 0 : real.caTotal) + _simRevenusAudio + _simRevenusVideo;
   const caReelPole = anneBlanche ? 0 : real.caPole;
 
   // Charges réelles
@@ -489,6 +503,11 @@ function SimulateurPage() {
       s + (c.pole === "video" ? c.montant : c.pole === "global" ? c.montant * pVideo : 0),
     0,
   );
+
+  // (Revenus simulés sont déjà ventilés via _simRevenusAudio/_simRevenusVideo plus haut,
+  //  et abondent directement caReelAudio/Video/Total.)
+
+
 
   // Charges totales
   const chargesTotal = chReelTotalEff + chProv + sumSal + simChargesTotal;
@@ -639,6 +658,20 @@ function SimulateurPage() {
     setSimCharges((p) => p.filter((c) => c.id !== id));
   };
 
+  // Revenu helpers (même pattern que simCharges)
+  const addRevenu = () => {
+    setSimRevenus((p) => [
+      ...p,
+      { id: Math.random().toString(36).slice(2), label: "", montant: 0, pole: "global" },
+    ]);
+  };
+  const updateRevenu = (id: string, patch: Partial<SimCharge>) => {
+    setSimRevenus((p) => p.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  };
+  const removeRevenu = (id: string) => {
+    setSimRevenus((p) => p.filter((c) => c.id !== id));
+  };
+
   const SimuleBadge = () => (
     <span
       className="rounded px-1.5 py-0.5 text-[10px] font-medium"
@@ -753,6 +786,59 @@ function SimulateurPage() {
           >
             <Plus className="h-3 w-3" />
             Ajouter une charge
+          </button>
+        </Section>
+
+        {/* Revenus simulés */}
+        <Section title="Revenus simulés">
+          {simRevenus.map((c) => (
+            <div key={c.id} className="rounded-md border border-border p-2 space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Input
+                  value={c.label}
+                  onChange={(e) => updateRevenu(c.id, { label: e.target.value })}
+                  placeholder="Libellé"
+                  className="h-7 flex-1 text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeRevenu(c.id)}
+                  className="text-muted-foreground hover:text-destructive"
+                  title="Supprimer"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={c.montant}
+                    onChange={(e) => updateRevenu(c.id, { montant: parseFloat(e.target.value) || 0 })}
+                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    className="h-7 pr-5 text-xs"
+                  />
+                  <span className="pointer-events-none absolute inset-y-0 right-1.5 flex items-center text-[10px] text-muted-foreground">€</span>
+                </div>
+                <select
+                  value={c.pole}
+                  onChange={(e) => updateRevenu(c.id, { pole: e.target.value as ChargePole })}
+                  className="flex h-7 w-full rounded-md border border-input bg-transparent px-2 text-xs"
+                >
+                  <option value="global">Global</option>
+                  <option value="audio">Audio</option>
+                  <option value="video">Vidéo</option>
+                </select>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addRevenu}
+            className="flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:border-foreground/40"
+          >
+            <Plus className="h-3 w-3" />
+            Ajouter un revenu
           </button>
         </Section>
       </aside>
