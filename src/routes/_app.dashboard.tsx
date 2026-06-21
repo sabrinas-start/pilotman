@@ -217,6 +217,98 @@ function DashboardPage() {
   const chargesProjeteesAnnuelles = chargesReelTotal + chargesProvAnnee + salairesAnnee;
   const soldeProjeteAnnuel = caProjecte - chargesProjeteesAnnuelles;
 
+  // ── Variantes par pôle (Capacité + Projection) ──────────────────────────
+  function computePoleVariant(
+    caP: number,
+    caObjectifP: number,
+    chargesTotalP: number,
+    pctP: number,
+    pipeRetenuP: number,
+  ) {
+    const caObjectifYTD_P = caObjectifP * pctAnneeEcoulee;
+    const surplus_P = caP - caObjectifYTD_P;
+    const surplusPondere_P = surplus_P * pctAnneeEcoulee;
+    const caPondere_P = surplus_P >= 0 ? caObjectifYTD_P + surplusPondere_P : caP;
+    const chargesYTD_P = chargesTotalP;
+    const resPondere_P = caPondere_P - chargesYTD_P;
+    const montantReserve_P = resPondere_P > 0 ? resPondere_P * reserve : 0;
+    const indicateur2_P = resPondere_P > 0 ? resPondere_P * (1 - reserve) : resPondere_P;
+
+    const caProjecte_P = caP + (caObjectifP - caObjectifYTD_P);
+    const ecartProjecte_P = caProjecte_P - caObjectifP;
+    const pctRealisationAnnuelProjecte_P = caObjectifP > 0 ? caProjecte_P / caObjectifP : 0;
+    const chargesProjeteesAnnuelles_P =
+      chargesTotalP + chargesProvAnnee * pctP + salairesAnnee * pctP;
+    const soldeProjeteAnnuel_P = caProjecte_P - chargesProjeteesAnnuelles_P;
+    const ecartPosition_P =
+      caObjectifP > 0 ? caProjecte_P / caObjectifP - pctAnneeEcoulee : 0;
+
+    return {
+      caTotal: caP,
+      caObjectifYTD: caObjectifYTD_P,
+      surplus: surplus_P,
+      surplusPondere: surplusPondere_P,
+      caPondere: caPondere_P,
+      chargesYTD: chargesYTD_P,
+      resPondere: resPondere_P,
+      montantReserve: montantReserve_P,
+      indicateur2: indicateur2_P,
+      caProjecte: caProjecte_P,
+      ecartProjecte: ecartProjecte_P,
+      pctRealisationAnnuelProjecte: pctRealisationAnnuelProjecte_P,
+      chargesProjeteesAnnuelles: chargesProjeteesAnnuelles_P,
+      soldeProjeteAnnuel: soldeProjeteAnnuel_P,
+      pipeRetenu: pipeRetenuP,
+      ecartPosition: ecartPosition_P,
+      caObjectif: caObjectifP,
+    };
+  }
+
+  const audioVar = computePoleVariant(
+    caAudio,
+    num(objectifs.ca_objectif_audio),
+    chargesTotalAudio,
+    pctAudio,
+    pipeRetenuAudio,
+  );
+  const videoVar = computePoleVariant(
+    caVideo,
+    num(objectifs.ca_objectif_video),
+    chargesTotalVideo,
+    pctVideo,
+    pipeRetenuVideo,
+  );
+
+  const globalVar = {
+    caTotal,
+    caObjectifYTD,
+    surplus,
+    surplusPondere,
+    caPondere,
+    chargesYTD,
+    resPondere,
+    montantReserve,
+    indicateur2,
+    caProjecte,
+    ecartProjecte,
+    pctRealisationAnnuelProjecte,
+    chargesProjeteesAnnuelles,
+    soldeProjeteAnnuel,
+    pipeRetenu: pipeRetenuTotal,
+    ecartPosition,
+    caObjectif: caObjectifGlobal,
+  };
+
+  const selectedVar =
+    cardsScope === "Audio" ? audioVar : cardsScope === "Vidéo" ? videoVar : globalVar;
+  const scopeSuffix =
+    cardsScope === "Audio" ? "Audio" : cardsScope === "Vidéo" ? "Vidéo" : "globale";
+  const capaciteTitle = `💡 Enveloppe ${scopeSuffix} · Capacité d'investissement`;
+  const projectionTitle =
+    cardsScope === "Global"
+      ? "Projection fin d'année"
+      : `Projection fin d'année · ${cardsScope}`;
+
   const dateSnapshot = str(metriques.date_snapshot) || "—";
 
   // ── Render ───────────────────────────────────────────────────────────────
