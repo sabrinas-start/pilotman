@@ -587,6 +587,47 @@ function SimulateurPage() {
   }, [real, chargesProv, salaires, scope]);
   const kpisBaseline = calculerKpis(paramsBaseline);
 
+  // ── Décompositions affichage (baseline) ─────────────────────────────
+  const baselineBreakdown = useMemo(() => {
+    const pAudioBase = real.pctAudio;
+    const pVideoBase = 1 - real.pctAudio;
+    const chProvBase = chargesProv
+      .filter((r) => num(r.fields.mois) <= real.moisCourant)
+      .reduce((s, r) => s + num(r.fields.montant_provisionne), 0);
+    const sumSalBase = salaires
+      .filter((r) => num(r.fields.mois) <= real.moisCourant)
+      .reduce((s, r) => s + num(r.fields.montant_impute), 0);
+    const chargesProvAnneeBase = chargesProv.reduce(
+      (s, r) => s + num(r.fields.montant_provisionne),
+      0,
+    );
+    const salairesAnneeBase = salaires.reduce(
+      (s, r) => s + num(r.fields.montant_impute),
+      0,
+    );
+    return {
+      pAudioBase,
+      pVideoBase,
+      chargesReellesAudioBase: real.chargesAudio + real.chargesCommunes * pAudioBase,
+      chargesReellesVideoBase: real.chargesVideo + real.chargesCommunes * pVideoBase,
+      chargesProvAudioBase: chProvBase * pAudioBase,
+      chargesProvVideoBase: chProvBase * pVideoBase,
+      chargesSalAudioBase: sumSalBase * pAudioBase,
+      chargesSalVideoBase: sumSalBase * pVideoBase,
+      chargesProvAnneeBase,
+      salairesAnneeBase,
+      caObjectifGlobalBase: real.caObjectifAudio + real.caObjectifVideo,
+    };
+  }, [real, chargesProv, salaires]);
+
+  // Projection charges (annualisée) pour solde projeté
+  const chargesProjeteesBase =
+    real.chReelTotal + baselineBreakdown.chargesProvAnneeBase + baselineBreakdown.salairesAnneeBase;
+  const chargesProjeteesSimule =
+    real.chReelTotal + chProvAnnuel + sumSalAnnuel + simChargesTotal;
+  const soldeProjeteBase = kpisBaseline.projTotal - chargesProjeteesBase;
+  const soldeProjeteSimule = kpisSimule.projTotal - chargesProjeteesSimule;
+
   // Destructurations — conservent les noms utilisés dans le rendu
   const { capacite, capDetail, projAudio, projVideo, projTotal,
           enveloppeAudio, enveloppeVideo, resT, resA, resV } = kpisSimule;
