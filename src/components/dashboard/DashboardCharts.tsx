@@ -257,6 +257,9 @@ export function DashboardCharts({
               dot={false}
               connectNulls={false}
             />
+            <Line type="monotone" dataKey="revenusProj" stroke={COLOR_POSITIVE} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
+            <Line type="monotone" dataKey="chargesProj" stroke={COLOR_NEGATIVE} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
+            <Line type="monotone" dataKey="soldeProj" stroke={COLOR_REEL} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
           </LineChart>
         </ResponsiveContainer>,
       )}
