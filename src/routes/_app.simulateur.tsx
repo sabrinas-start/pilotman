@@ -277,6 +277,7 @@ function SimulateurPage() {
   const [saisonAudio, setSaisonAudio] = useState<number[]>(Array(12).fill(0));
   const [saisonVideo, setSaisonVideo] = useState<number[]>(Array(12).fill(0));
   const [simCharges, setSimCharges] = useState<SimCharge[]>([]);
+  const [simRevenus, setSimRevenus] = useState<SimCharge[]>([]);
   const [chargesFixesEdit, setChargesFixesEdit] =
     useState<Record<string, { montant: number; taux: number }>>({});
   const [openGroupes, setOpenGroupes] = useState<Record<string, boolean>>({});
