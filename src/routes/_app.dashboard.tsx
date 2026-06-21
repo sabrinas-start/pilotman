@@ -506,7 +506,7 @@ function PoleCard({
           <p className="text-xs uppercase tracking-wide" style={{ color }}>
             {label}
           </p>
-          <p className={cn("mt-2 text-3xl font-semibold", signClass(enveloppe))}>
+          <p className={cn("mt-2 text-2xl font-semibold", signClass(enveloppe))}>
             {fmtEUR(enveloppe)}
           </p>
           <ul className="mt-4 space-y-1.5 text-sm">
