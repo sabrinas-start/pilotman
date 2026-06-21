@@ -1226,8 +1226,9 @@ function SimulateurPage() {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_3fr]">
           <ComparisonCard
             title="Projection fin d'année"
-            reel={kpisBaseline.projTotal}
-            simule={kpisSimule.projTotal}
+            reel={scope === "audio" ? kpisBaseline.projAudio : scope === "video" ? kpisBaseline.projVideo : kpisBaseline.projTotal}
+            simule={scope === "audio" ? kpisSimule.projAudio : scope === "video" ? kpisSimule.projVideo : kpisSimule.projTotal}
+            right={<ScopeToggle scope={scope} setScope={setScope} />}
             anneBlanche={anneBlanche}
             footer={
               <div className="mt-3 border-t border-border pt-2">
