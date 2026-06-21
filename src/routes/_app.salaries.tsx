@@ -999,6 +999,9 @@ function EditMoisModal({
           <Field label="% imputation">
             <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
           </Field>
+          <Field label="Prime (€)">
+            <Input type="number" value={prime} onChange={(e) => setPrime(e.target.value)} onWheel={blurOnWheel} />
+          </Field>
           <div className="rounded border border-border bg-muted/20 px-3 py-2 text-sm">
             <span className="text-muted-foreground">Montant imputé :</span>{" "}
             <span className="font-medium tabular-nums">{fmtEUR(montantImpute)}</span>
