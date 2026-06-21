@@ -992,7 +992,151 @@ function SimulateurPage() {
           )}
         </div>
 
-        {/* Cartes métriques */}
+        {/* Charges simulées */}
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setChargesSimOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-medium text-foreground"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", chargesSimOpen && "rotate-180")} />
+              Charges simulées
+              <span className="text-xs text-muted-foreground">
+                ({simCharges.length} ligne{simCharges.length > 1 ? "s" : ""})
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={addCharge}
+              className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <Plus className="h-3 w-3" />
+              Ajouter une charge
+            </button>
+          </div>
+          {chargesSimOpen && (
+            <div className="mt-4 space-y-1.5">
+              {simCharges.length === 0 && (
+                <p className="text-xs text-muted-foreground">Aucune charge simulée.</p>
+              )}
+              {simCharges.map((c) => (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_140px_110px_32px] md:gap-3"
+                >
+                  <Input
+                    value={c.label}
+                    onChange={(e) => updateCharge(c.id, { label: e.target.value })}
+                    placeholder="Libellé"
+                    className="h-8 text-sm"
+                  />
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={c.montant}
+                      onChange={(e) => updateCharge(c.id, { montant: parseFloat(e.target.value) || 0 })}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                      className="h-8 pr-6 text-right tabular-nums"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">€</span>
+                  </div>
+                  <select
+                    value={c.pole}
+                    onChange={(e) => updateCharge(c.id, { pole: e.target.value as ChargePole })}
+                    className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs"
+                  >
+                    <option value="global">Global</option>
+                    <option value="audio">Audio</option>
+                    <option value="video">Vidéo</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeCharge(c.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Revenus simulés */}
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #1D9E75", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setRevenusSimOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-medium text-foreground"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", revenusSimOpen && "rotate-180")} />
+              Revenus simulés
+              <span className="text-xs text-muted-foreground">
+                ({simRevenus.length} ligne{simRevenus.length > 1 ? "s" : ""})
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={addRevenu}
+              className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <Plus className="h-3 w-3" />
+              Ajouter un revenu
+            </button>
+          </div>
+          {revenusSimOpen && (
+            <div className="mt-4 space-y-1.5">
+              {simRevenus.length === 0 && (
+                <p className="text-xs text-muted-foreground">Aucun revenu simulé.</p>
+              )}
+              {simRevenus.map((c) => (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_140px_110px_32px] md:gap-3"
+                >
+                  <Input
+                    value={c.label}
+                    onChange={(e) => updateRevenu(c.id, { label: e.target.value })}
+                    placeholder="Libellé"
+                    className="h-8 text-sm"
+                  />
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={c.montant}
+                      onChange={(e) => updateRevenu(c.id, { montant: parseFloat(e.target.value) || 0 })}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                      className="h-8 pr-6 text-right tabular-nums"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">€</span>
+                  </div>
+                  <select
+                    value={c.pole}
+                    onChange={(e) => updateRevenu(c.id, { pole: e.target.value as ChargePole })}
+                    className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs"
+                  >
+                    <option value="global">Global</option>
+                    <option value="audio">Audio</option>
+                    <option value="video">Vidéo</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeRevenu(c.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ─── Résultats ─── */}
         {anneBlanche ? (
           <section className="grid grid-cols-1 gap-4">
             <MetricCard title="CA objectif annuel" badge>
@@ -1005,50 +1149,30 @@ function SimulateurPage() {
           </section>
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <MetricCard title="CA réel · YTD" badge>
-              <p className="text-2xl font-semibold text-foreground">{fmtEUR(caReelTotal)}</p>
-              <ul className="mt-3 space-y-1 text-sm">
-                <PoleLine label="Audio" value={fmtEUR(caReelAudio)} pole="audio" />
-                <PoleLine label="Vidéo" value={fmtEUR(caReelVideo)} pole="video" />
-                <PoleLine label="Pôle" value={fmtEUR(caReelPole)} />
-              </ul>
-            </MetricCard>
-            <MetricCard title="Projection fin d'année" badge>
-              <p className="text-2xl font-semibold text-foreground">{fmtEUR(projTotal)}</p>
-              <ul className="mt-3 space-y-1 text-sm">
-                <PoleLine label="Audio" value={fmtEUR(projAudio)} pole="audio" />
-                <PoleLine label="Vidéo" value={fmtEUR(projVideo)} pole="video" />
-              </ul>
-            </MetricCard>
+            <ComparisonCard
+              title="Projection fin d'année"
+              reel={kpisBaseline.projTotal}
+              simule={kpisSimule.projTotal}
+            />
+            <ComparisonCard
+              title="💡 Capacité d'investissement"
+              reel={kpisBaseline.capacite[scope]}
+              simule={kpisSimule.capacite[scope]}
+              right={<ScopeToggle scope={scope} setScope={setScope} />}
+            />
           </section>
         )}
 
-        {/* Enveloppes (mode normal seulement) */}
-        {!anneBlanche && (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <EnvelopeCard pole="audio" title="🎙 Enveloppe Audio" value={enveloppeAudio} ca={caReelAudio} charges={chargesAudioTotal} />
-            <EnvelopeCard pole="video" title="🎬 Enveloppe Vidéo" value={enveloppeVideo} ca={caReelVideo} charges={chargesVideoTotal} />
-          </section>
-        )}
-
-        {/* Capacité d'investissement */}
+        {/* Détail Capacité (déroulant) */}
         <section>
           <div className="rounded-lg border border-border bg-surface p-5">
             <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
-                  💡 Capacité d'investissement
-                </h3>
-                <SimuleBadge />
-              </div>
-              <ScopeToggle scope={scope} setScope={setScope} />
+              <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
+                Détail du calcul · Capacité (simulé)
+              </h3>
+              <SimuleBadge />
             </div>
-            <p className={cn("text-3xl font-semibold", signClass(capacite[scope]))}>
-              {fmtEUR(capacite[scope])}
-            </p>
-
-            <div className="mt-5 border-t border-border" />
-            <div className="mt-4 space-y-0">
+            <div className="space-y-0">
               {anneBlanche ? (
                 <>
                   <CalcRow op="" label="CA objectif" value={fmtEUR(capDetail.caObj)} />
@@ -1091,7 +1215,7 @@ function SimulateurPage() {
           <div className="rounded-lg border border-border bg-surface p-5">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
-                Projection mensuelle cumulée
+                Revenus vs Charges cumulées
               </h3>
               <ScopeToggle scope={scope} setScope={setScope} />
             </div>
@@ -1112,19 +1236,36 @@ function SimulateurPage() {
                   />
                   <Legend wrapperStyle={{ fontSize: 11, color: "#888" }} />
                   <ReferenceLine y={0} stroke="#2e2e2e" />
-                  {/* Réelles */}
                   <Line type="monotone" dataKey="revenusReel" name="Revenus cumulés" stroke={C_POS} strokeWidth={2} dot={false} connectNulls={false} />
                   <Line type="monotone" dataKey="chargesReel" name="Charges cumulées" stroke={C_NEG} strokeWidth={2} dot={false} connectNulls={false} />
                   <Line type="monotone" dataKey="soldeReel" name="Solde" stroke={C_ACCENT} strokeWidth={2} strokeDasharray="4 4" dot={false} connectNulls={false} />
-                  {/* Projetées */}
                   <Line type="monotone" dataKey="revenusProj" name="Revenus (proj.)" stroke={C_POS} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
                   <Line type="monotone" dataKey="chargesProj" name="Charges (proj.)" stroke={C_NEG} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
                   <Line type="monotone" dataKey="soldeProj" name="Solde (proj.)" stroke={C_ACCENT} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
+                  <Line type="monotone" dataKey="chargesSim" name="Charges (simulé)" stroke="#D85A30" strokeWidth={1} strokeDasharray="2 3" strokeOpacity={0.4} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
         </section>
+
+        {/* Enveloppes (mode normal seulement) */}
+        {!anneBlanche && (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <ComparisonCard
+              title="🎙 Enveloppe Audio"
+              reel={kpisBaseline.enveloppeAudio}
+              simule={kpisSimule.enveloppeAudio}
+              pole="audio"
+            />
+            <ComparisonCard
+              title="🎬 Enveloppe Vidéo"
+              reel={kpisBaseline.enveloppeVideo}
+              simule={kpisSimule.enveloppeVideo}
+              pole="video"
+            />
+          </section>
+        )}
       </div>
     </div>
   );
