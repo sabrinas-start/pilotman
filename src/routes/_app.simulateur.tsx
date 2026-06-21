@@ -1629,9 +1629,9 @@ function CalcRow({ op, label, value, semantic, bold }: {
   );
 }
 
-function ComparisonCard({ title, reel, simule, pole, right, children, footer }: {
+function ComparisonCard({ title, reel, simule, pole, right, children, footer, anneBlanche }: {
   title: string; reel: number; simule: number; pole?: Pole; right?: React.ReactNode;
-  children?: React.ReactNode; footer?: React.ReactNode;
+  children?: React.ReactNode; footer?: React.ReactNode; anneBlanche?: boolean;
 }) {
   const ecart = simule - reel;
   const { bg, text } = poleColor(pole);
