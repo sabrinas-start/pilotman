@@ -7,6 +7,8 @@ import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
+
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Tableau de bord — Pôle Tournage" }] }),
@@ -220,17 +222,20 @@ function DashboardPage() {
   return (
     <div className="space-y-4">
       {/* En-tête */}
-      <header className="border-b border-border pb-4">
-        <h2 className="text-2xl font-semibold text-foreground">
-          {profil === "audio"
-            ? "Pôle Audio — Tableau de bord"
-            : profil === "video"
-              ? "Pôle Vidéo — Tableau de bord"
-              : "Tableau de bord · Pôle Tournage"}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Snapshot au {dateSnapshot} · Données CA au {dateSnapshot}
-        </p>
+      <header className="border-b border-border pb-4 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">
+            {profil === "audio"
+              ? "Pôle Audio — Tableau de bord"
+              : profil === "video"
+                ? "Pôle Vidéo — Tableau de bord"
+                : "Tableau de bord · Pôle Tournage"}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Snapshot au {dateSnapshot} · Données CA au {dateSnapshot}
+          </p>
+        </div>
+        <NotificationBell />
       </header>
 
       {errors.length > 0 && (
