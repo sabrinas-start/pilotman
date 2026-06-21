@@ -536,7 +536,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
           fonpeps_annuel: parseFloat(fonpepsAnnuel) || 0,
           taux_imputation: (parseFloat(taux) || 0) / 100,
         };
-        if (isCDD && dateFin) fields.date_fin_charge = `${dateFin}-01`;
+        if (!isGerant && dateFin) fields.date_fin_charge = `${dateFin}-01`;
         const created = await airtablePost(SALARIES_TABLE, fields);
         const recordId = (created.id ?? created.records?.[0]?.id) as string;
         // call webhook
