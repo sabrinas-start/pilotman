@@ -296,14 +296,14 @@ function SalariesPage() {
           <tbody>
             {salariesQ.loading && (
               <tr>
-                <td colSpan={7} className="p-4">
+                <td colSpan={9} className="p-4">
                   <Skeleton className="h-8 w-full" />
                 </td>
               </tr>
             )}
             {!salariesQ.loading && salaries.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
                   Aucun salarié actif. Cliquez sur "Ajouter un salarié" pour commencer.
                 </td>
               </tr>
@@ -317,6 +317,7 @@ function SalariesPage() {
                   salarie={s}
                   badge={badge}
                   isOpen={isOpen}
+                  montantAnnuelParSalarie={montantAnnuelParSalarie}
                   onToggle={() => setExpanded(isOpen ? null : s.id)}
                   onEdit={() => setEditSalarie(s)}
                   onDelete={() => setDeleteSalarie(s)}
@@ -325,6 +326,14 @@ function SalariesPage() {
               );
             })}
           </tbody>
+          <tfoot className="border-t-2 border-border bg-muted/20 font-medium">
+            <tr>
+              <td className="px-4 py-3" colSpan={6}>Total</td>
+              <td className="px-4 py-3 text-right tabular-nums">{fmtEUR(totalMontantAnnuel)}</td>
+              <td className="px-4 py-3 text-right tabular-nums">{fmtEUR(totalCteImputeAnnuel)}</td>
+              <td className="px-4 py-3" />
+            </tr>
+          </tfoot>
         </table>
       </div>
 
