@@ -1216,34 +1216,25 @@ function SimulateurPage() {
         </div>
 
         {/* ─── Résultats ─── */}
-        {anneBlanche ? (
-          <section className="grid grid-cols-1 gap-4">
-            <MetricCard title="CA objectif annuel" badge>
-              <p className="text-2xl font-semibold text-foreground">{fmtEUR(caObjGlobal)}</p>
-              <ul className="mt-3 space-y-1 text-sm">
-                <PoleLine label="Audio" value={fmtEUR(caObjAudio)} pole="audio" />
-                <PoleLine label="Vidéo" value={fmtEUR(caObjVideo)} pole="video" />
-              </ul>
-            </MetricCard>
-          </section>
-        ) : (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_3fr]">
-            <ComparisonCard
-              title="Projection fin d'année"
-              reel={kpisBaseline.projTotal}
-              simule={kpisSimule.projTotal}
-              footer={
-                <div className="mt-3 border-t border-border pt-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs" style={{ color: C_ACCENT }}>Pipe attendu</span>
-                    <span className="text-sm font-semibold tabular-nums" style={{ color: C_ACCENT }}>
-                      {fmtEUR(real.pipeRetenuTotal)}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">donnée réelle, non simulable</p>
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_3fr]">
+          <ComparisonCard
+            title="Projection fin d'année"
+            reel={kpisBaseline.projTotal}
+            simule={kpisSimule.projTotal}
+            anneBlanche={anneBlanche}
+            footer={
+              <div className="mt-3 border-t border-border pt-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs" style={{ color: C_ACCENT }}>Pipe attendu</span>
+                  <span className="text-sm font-semibold tabular-nums" style={{ color: C_ACCENT }}>
+                    {fmtEUR(real.pipeRetenuTotal)}
+                  </span>
                 </div>
-              }
-            >
+                <p className="text-[10px] text-muted-foreground">donnée réelle, non simulable</p>
+              </div>
+            }
+          >
+            {!anneBlanche && (
               <div className="mt-3 border-t border-border pt-2">
                 <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <span></span>
@@ -1267,17 +1258,35 @@ function SimulateurPage() {
                   semantic
                 />
               </div>
-            </ComparisonCard>
-            <ComparisonCard
-              title="💡 Capacité d'investissement"
-              reel={kpisBaseline.capacite[scope]}
-              simule={kpisSimule.capacite[scope]}
-              right={<ScopeToggle scope={scope} setScope={setScope} />}
-            >
-              <div className="mt-4 border-t border-border pt-3">
-                <p className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  Détail du calcul
-                </p>
+            )}
+          </ComparisonCard>
+          <ComparisonCard
+            title="💡 Capacité d'investissement"
+            reel={kpisBaseline.capacite[scope]}
+            simule={kpisSimule.capacite[scope]}
+            anneBlanche={anneBlanche}
+            right={<ScopeToggle scope={scope} setScope={setScope} />}
+          >
+            <div className="mt-4 border-t border-border pt-3">
+              <p className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+                Détail du calcul
+              </p>
+              {anneBlanche ? (
+                <div>
+                  <p className="mb-1 text-[10px] uppercase tracking-wide" style={{ color: C_ACCENT }}>Simulé</p>
+                  <div className="space-y-0">
+                    <CalcRow op="" label="CA objectif" value={fmtEUR(capDetail.caObj)} />
+                    <CalcRow op="−" label="Charges totales" value={`− ${fmtEUR(capDetail.ch)}`} />
+                    <CalcRow op="−" label={`Réserve sécurité (${reserve.toFixed(0)}%)`}
+                      value={`− ${fmtEUR(capDetail.caObj * reserveDecimal)}`} />
+                    <div className="mt-2 border-t border-border" />
+                    <div className="mt-2">
+                      <CalcRow op="=" label="Capacité d'investissement"
+                        value={fmtEUR(capacite[scope])} semantic={capacite[scope]} bold />
+                    </div>
+                  </div>
+                </div>
+              ) : (
                 <div className="grid grid-cols-2 gap-3">
                   <CapDetailCol
                     title="Réel"
@@ -1298,35 +1307,12 @@ function SimulateurPage() {
                     pctAnneeEcoulee={pctAnneeEcoulee * 100}
                   />
                 </div>
-              </div>
-            </ComparisonCard>
-          </section>
-        )}
-
-        {/* Détail Capacité — uniquement en mode année blanche (sinon intégré dans la card) */}
-        {anneBlanche && (
-        <section>
-          <div className="rounded-lg border border-border bg-surface p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
-                Détail du calcul · Capacité (simulé)
-              </h3>
-              <SimuleBadge />
+              )}
             </div>
-            <div className="space-y-0">
-              <CalcRow op="" label="CA objectif" value={fmtEUR(capDetail.caObj)} />
-              <CalcRow op="−" label="Charges totales" value={`− ${fmtEUR(capDetail.ch)}`} />
-              <CalcRow op="−" label={`Réserve sécurité (${reserve.toFixed(0)}%)`}
-                value={`− ${fmtEUR(capDetail.caObj * reserveDecimal)}`} />
-              <div className="mt-3 border-t border-border" />
-              <div className="mt-3">
-                <CalcRow op="=" label="Capacité d'investissement"
-                  value={fmtEUR(capacite[scope])} semantic={capacite[scope]} bold />
-              </div>
-            </div>
-          </div>
+          </ComparisonCard>
         </section>
-        )}
+
+
 
         {/* Graphique projection */}
         <section>
