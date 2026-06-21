@@ -908,11 +908,10 @@ function SimulateurPage() {
                             const taux = e?.taux ?? r.taux;
                             const impute = montant * (taux / 100);
                             const modifie = !!e && (e.montant !== r.montant || e.taux !== r.taux);
-                            const poleLabel = r.pole === "audio" ? "Audio" : r.pole === "video" ? "Vidéo" : "Global";
                             return (
                               <div
                                 key={r.id}
-                                className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_120px_90px_120px_70px] md:gap-3"
+                                className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_1fr_0.7fr_1fr] md:gap-3"
                               >
                                 <div className="flex items-center gap-2 text-sm text-foreground">
                                   <span
@@ -957,7 +956,6 @@ function SimulateurPage() {
                                   <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">%</span>
                                 </div>
                                 <div className="text-right text-sm tabular-nums text-foreground">{fmtEUR(impute)}</div>
-                                <div className="text-right text-xs text-muted-foreground">{poleLabel}</div>
                               </div>
                             );
                           })}
@@ -998,7 +996,7 @@ function SimulateurPage() {
           </div>
           {salairesOpen && (
             <div className="mt-4">
-              <div className="hidden grid-cols-[1.4fr_120px_90px_120px] gap-3 pb-2 text-[11px] uppercase tracking-wide text-muted-foreground md:grid">
+              <div className="hidden grid-cols-[1.4fr_1fr_0.7fr_1fr] gap-3 pb-2 text-[11px] uppercase tracking-wide text-muted-foreground md:grid">
                 <div>Salarié</div>
                 <div className="text-right">Montant annuel</div>
                 <div className="text-right">Taux</div>
@@ -1014,7 +1012,7 @@ function SimulateurPage() {
                   return (
                     <div
                       key={r.id}
-                      className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_120px_90px_120px] md:gap-3"
+                      className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_1fr_0.7fr_1fr] md:gap-3"
                     >
                       <div className="flex items-center gap-2 text-sm text-foreground">
                         <span
