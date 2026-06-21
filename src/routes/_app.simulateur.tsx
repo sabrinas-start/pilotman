@@ -259,6 +259,8 @@ function SimulateurPage() {
         num(objectifs[`saisonnalite_video_${String(i + 1).padStart(2, "0")}`]),
       ),
       dateSnapshot: str(metriques.date_snapshot) || "—",
+      pipeRetenuTotal:
+        num(metriques.ca_pipe_optimiste_total) + num(metriques.ca_pipe_pondere_total),
     };
   }, [metriques, objectifs, chargesReelles, chargesProv]);
 
