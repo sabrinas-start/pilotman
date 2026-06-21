@@ -89,46 +89,28 @@ function SimulateurPage() {
   const salaires: AirtableRecord[] = salairesQ.data ?? [];
 
   const real = useMemo(() => {
+    const pendingProvKeys = new Set(
+      chargesProv.map((r) => str(r.fields.cle_reconciliation)).filter(Boolean),
+    );
+    const estReconciliee = (r: AirtableRecord) =>
+      r.fields.est_fixe !== true || !pendingProvKeys.has(str(r.fields.cle_reconciliation));
     const moisCourant = new Date().getMonth() + 1;
     const cha = chargesReelles
-      .filter((r) => str(r.fields.categorie).startsWith("Tournage Son"))
+      .filter((r) => str(r.fields.categorie).startsWith("Tournage Son") && estReconciliee(r))
       .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
     const chv = chargesReelles
-      .filter((r) => str(r.fields.categorie).startsWith("Tournage Image"))
+      .filter((r) => str(r.fields.categorie).startsWith("Tournage Image") && estReconciliee(r))
       .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
-    const chReelTotal = num(metriques.charges_reel_total);
+    const chReelTotalBrut = num(metriques.charges_reel_total);
+    const reelFixeNonReconciliee = chargesReelles
+      .filter((r) => r.fields.est_fixe === true && pendingProvKeys.has(str(r.fields.cle_reconciliation)))
+      .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
+    const chReelTotal = chReelTotalBrut - reelFixeNonReconciliee;
     const chCom = chReelTotal - cha - chv;
-
-    return {
-      moisCourant,
-      caAudio: num(metriques.ca_reel_audio),
-      caVideo: num(metriques.ca_reel_video),
-      caPole: num(metriques.ca_reel_pole),
-      caTotal: num(metriques.ca_reel_total),
-      chReelTotal,
-      chargesAudio: cha,
-      chargesVideo: chv,
-      chargesCommunes: chCom,
-      pctAudio: num(objectifs.pct_attribution_audio),
-      pctVideo: num(objectifs.pct_attribution_video),
-      caObjectifAudio: num(objectifs.ca_objectif_audio),
-      caObjectifVideo: num(objectifs.ca_objectif_video),
-      reserve: num(objectifs.reserve_securite) || 0.2,
-      plancherAudio: num(objectifs.plancher_audio),
-      plafondAudio: num(objectifs.plafond_audio),
-      plancherVideo: num(objectifs.plancher_video),
-      plafondVideo: num(objectifs.plafond_video),
-      tauxOption: num(objectifs.taux_concretisation_option),
-      tauxConfirme: num(objectifs.taux_concretisation_confirme),
-      saisonAudio: Array.from({ length: 12 }, (_, i) =>
-        num(objectifs[`saisonnalite_audio_${String(i + 1).padStart(2, "0")}`]),
-      ),
-      saisonVideo: Array.from({ length: 12 }, (_, i) =>
-        num(objectifs[`saisonnalite_video_${String(i + 1).padStart(2, "0")}`]),
-      ),
+...
       dateSnapshot: str(metriques.date_snapshot) || "—",
     };
-  }, [metriques, objectifs, chargesReelles]);
+  }, [metriques, objectifs, chargesReelles, chargesProv]);
 
   // ── State ─────────────────────────────────────────────────────────────
   const [anneBlanche, setAnneBlanche] = useState(false);
