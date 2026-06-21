@@ -1669,3 +1669,37 @@ function CompareRow({ label, reel, simule, semantic }: {
     </div>
   );
 }
+
+function CapDetailCol({
+  title, titleColor, detail, capacite, reservePct, pctAnneeEcoulee,
+}: {
+  title: string;
+  titleColor: string;
+  detail: { caR: number; caObj: number; ch: number; objYTD: number; surplus: number; surplusPond: number; caPond: number; resPond: number; reserveMontant: number };
+  capacite: number;
+  reservePct: number;
+  pctAnneeEcoulee: number; // 0-100
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-[10px] uppercase tracking-wide" style={{ color: titleColor }}>{title}</p>
+      <div className="space-y-0">
+        <CalcRow op="" label="CA réel YTD" value={fmtEUR(detail.caR)} />
+        <CalcRow op="−" label="CA objectif YTD" value={`− ${fmtEUR(detail.objYTD)}`} />
+        <CalcRow op="=" label="Surplus" value={fmtEUR(detail.surplus)} />
+        <CalcRow op="×" label={`% année écoulée (${pctAnneeEcoulee.toFixed(0)}%)`} value={`× ${pctAnneeEcoulee.toFixed(0)}%`} />
+        <CalcRow op="=" label="Surplus pondéré" value={fmtEUR(detail.surplusPond)} />
+        <CalcRow op="+" label="CA objectif YTD" value={`+ ${fmtEUR(detail.objYTD)}`} />
+        <CalcRow op="=" label="CA pondéré" value={fmtEUR(detail.caPond)} />
+        <CalcRow op="−" label="Charges totales" value={`− ${fmtEUR(detail.ch)}`} />
+        <CalcRow op="=" label="Résultat pondéré" value={fmtEUR(detail.resPond)} semantic={detail.resPond} />
+        <CalcRow op="−" label={`Réserve sécurité (${reservePct.toFixed(0)}%)`}
+          value={detail.reserveMontant > 0 ? `− ${fmtEUR(detail.reserveMontant)}` : fmtEUR(0)} />
+        <div className="mt-2 border-t border-border" />
+        <div className="mt-2">
+          <CalcRow op="=" label="Capacité" value={fmtEUR(capacite)} semantic={capacite} bold />
+        </div>
+      </div>
+    </div>
+  );
+}
