@@ -410,6 +410,7 @@ function ExpandedContent({
               <th className="px-3 py-2 text-right">CTE mensuel</th>
               <th className="px-3 py-2 text-right">FONPEPS</th>
               <th className="px-3 py-2 text-right">% imputation</th>
+              <th className="px-3 py-2 text-right">Prime</th>
               <th className="px-3 py-2 text-right">Montant imputé</th>
               <th className="px-3 py-2 w-16" />
             </tr>
