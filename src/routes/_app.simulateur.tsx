@@ -1129,11 +1129,11 @@ function SimulateurPage() {
                   <select
                     value={c.pole}
                     onChange={(e) => updateCharge(c.id, { pole: e.target.value as ChargePole })}
-                    className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs"
+                    className="flex h-8 w-full rounded-md border border-input bg-[#1a1a22] text-foreground px-2 text-xs"
                   >
-                    <option value="global">Global</option>
-                    <option value="audio">Audio</option>
-                    <option value="video">Vidéo</option>
+                    <option value="global" className="bg-[#1a1a22] text-foreground">Global</option>
+                    <option value="audio" className="bg-[#1a1a22] text-foreground">Audio</option>
+                    <option value="video" className="bg-[#1a1a22] text-foreground">Vidéo</option>
                   </select>
                   <button
                     type="button"
@@ -1201,11 +1201,11 @@ function SimulateurPage() {
                   <select
                     value={c.pole}
                     onChange={(e) => updateRevenu(c.id, { pole: e.target.value as ChargePole })}
-                    className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs"
+                    className="flex h-8 w-full rounded-md border border-input bg-[#1a1a22] text-foreground px-2 text-xs"
                   >
-                    <option value="global">Global</option>
-                    <option value="audio">Audio</option>
-                    <option value="video">Vidéo</option>
+                    <option value="global" className="bg-[#1a1a22] text-foreground">Global</option>
+                    <option value="audio" className="bg-[#1a1a22] text-foreground">Audio</option>
+                    <option value="video" className="bg-[#1a1a22] text-foreground">Vidéo</option>
                   </select>
                   <button
                     type="button"
