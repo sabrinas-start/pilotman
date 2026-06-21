@@ -187,6 +187,7 @@ function SimulateurPage() {
     objectifsQ.loading ||
     chargesReellesQ.loading ||
     chargesProvQ.loading ||
+    refCategoriesQ.loading ||
     salairesQ.loading;
 
   const metriques = (metriquesQ.data?.[0]?.fields ?? {}) as Record<string, unknown>;
