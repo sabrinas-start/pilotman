@@ -222,70 +222,70 @@ function DashboardPage() {
         </div>
       )}
 
-      {/* BLOC 1 — 3 cards (masqué pour les pôles) */}
-      {!isPoleOnly && (
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        {/* Card 1 — État réel */}
-        <BaseCard loading={loading} label="État réel · YTD">
-          <p className={cn("text-3xl font-semibold", signClass(caTotal - chargesTotalGlobal))}>
-            {fmtEUR(caTotal - chargesTotalGlobal)}
-          </p>
-          <ul className="mt-4 space-y-1.5 text-sm">
-            <DetailRow label="CA réel YTD" value={fmtEUR(caTotal)} />
-            <DetailRow label="Charges YTD totales" value={fmtEUR(chargesTotalGlobal)} />
-            <SubDetail label="dont charges réelles" value={fmtEUR(chargesReelTotal)} />
-            <SubDetail label="dont provisions restantes" value={fmtEUR(chargesProvRestantes)} />
-            <SubDetail label="dont salaires imputés" value={fmtEUR(salairesImputes)} />
-          </ul>
-        </BaseCard>
-
-        {/* Card 2 — Avancement */}
-        <BaseCard loading={loading} label="Avancement · YTD">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Réalisation objectif YTD
+      {/* BLOC 1 — État réel + Pôles */}
+      <section
+        className={cn(
+          "grid grid-cols-1 gap-3",
+          !isPoleOnly ? "md:grid-cols-3" : "md:grid-cols-1",
+        )}
+      >
+        {!isPoleOnly && (
+          <BaseCard loading={loading} label="État réel · YTD">
+            <p className={cn("text-3xl font-semibold", signClass(caTotal - chargesTotalGlobal))}>
+              {fmtEUR(caTotal - chargesTotalGlobal)}
             </p>
-            <p className="mt-1 text-3xl font-semibold text-foreground">
-              {(pctRealisationYTD * 100).toFixed(0)}%
-            </p>
-            <div className="mt-2 h-0.5 w-full rounded bg-border overflow-hidden">
-              <div
-                className={pctRealisationYTD >= 1 ? "bg-accent h-full" : "bg-destructive h-full"}
-                style={{ width: `${Math.min(pctRealisationYTD * 100, 100)}%` }}
-              />
-            </div>
-            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-              <span>CA réel YTD : {fmtEUR(caTotal)}</span>
-              <span>Objectif : {fmtEUR(caObjectifYTD)}</span>
-            </div>
-          </div>
-          <hr className="my-3 border-border" />
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Position dans l'année
-            </p>
-            <p className={cn("mt-1 text-3xl font-semibold", signClass(ecartPosition))}>
-              {(ecartPosition * 100 >= 0 ? "+" : "")}
-              {(ecartPosition * 100).toFixed(0)}%
-            </p>
-            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-              <span>% année écoulée : {(pctAnneeEcoulee * 100).toFixed(0)}%</span>
-              <span>% CA annuel réalisé : {(pctCaAnnuelRealise * 100).toFixed(0)}%</span>
-            </div>
-          </div>
-        </BaseCard>
-
-        {/* Card 3 — Pipeline */}
-        <BaseCard loading={loading} label="Pipeline · Global">
-          <p className="text-3xl font-semibold" style={{ color: C_ACCENT }}>
-            {fmtEUR(pipeRetenuTotal)}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Optimiste + pondéré (taux appliqués)
-          </p>
-        </BaseCard>
+            <ul className="mt-4 space-y-1.5 text-sm">
+              <DetailRow label="CA réel YTD" value={fmtEUR(caTotal)} />
+              <DetailRow label="Charges YTD totales" value={fmtEUR(chargesTotalGlobal)} />
+            </ul>
+            <Collapsible>
+              <CollapsibleTrigger className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground [&[data-state=open]>svg]:rotate-180">
+                <ChevronDown className="h-3.5 w-3.5 transition-transform" />
+                Voir le détail
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <ul className="mt-3 space-y-1.5 text-sm">
+                  <SubDetail label="dont charges réelles" value={fmtEUR(chargesReelTotal)} />
+                  <SubDetail label="dont provisions restantes" value={fmtEUR(chargesProvRestantes)} />
+                  <SubDetail label="dont salaires imputés" value={fmtEUR(salairesImputes)} />
+                </ul>
+              </CollapsibleContent>
+            </Collapsible>
+          </BaseCard>
+        )}
+        {profil !== "video" && (
+          <PoleCard
+            loading={loading}
+            color={C_AUDIO}
+            label="Pôle Audio · YTD"
+            enveloppe={enveloppeAudio}
+            ca={caAudio}
+            chargesTotal={chargesTotalAudio}
+            chargesReelles={chargesAudioTotal}
+            provisions={chargesProvRestantes * pctAudio}
+            salaires={salairesAudio}
+            pipeOpt={pipeOptAudio}
+            pipePon={pipePonAudio}
+            pipeRetenu={pipeRetenuAudio}
+          />
+        )}
+        {profil !== "audio" && (
+          <PoleCard
+            loading={loading}
+            color={C_VIDEO}
+            label="Pôle Vidéo · YTD"
+            enveloppe={enveloppeVideo}
+            ca={caVideo}
+            chargesTotal={chargesTotalVideo}
+            chargesReelles={chargesVideoTotal}
+            provisions={chargesProvRestantes * pctVideo}
+            salaires={salairesVideo}
+            pipeOpt={pipeOptVideo}
+            pipePon={pipePonVideo}
+            pipeRetenu={pipeRetenuVideo}
+          />
+        )}
       </section>
-      )}
 
       {/* BLOC 2 — Capacité d'investissement (masqué pour les pôles) */}
       {!isPoleOnly && (
@@ -312,103 +312,94 @@ function DashboardPage() {
       </section>
       )}
 
-
-      {/* BLOC 3 — Pôles Audio / Vidéo */}
-      <section className={cn("grid grid-cols-1 gap-3", !isPoleOnly && "md:grid-cols-2")}>
-        {(profil !== "video") && (
-        <PoleCard
-          loading={loading}
-          color={C_AUDIO}
-          label="Pôle Audio · YTD"
-          enveloppe={enveloppeAudio}
-          ca={caAudio}
-          chargesTotal={chargesTotalAudio}
-          chargesReelles={chargesAudioTotal}
-          provisions={chargesProvRestantes * pctAudio}
-          salaires={salairesAudio}
-          pipeOpt={pipeOptAudio}
-          pipePon={pipePonAudio}
-          pipeRetenu={pipeRetenuAudio}
-        />
-        )}
-        {(profil !== "audio") && (
-        <PoleCard
-          loading={loading}
-          color={C_VIDEO}
-          label="Pôle Vidéo · YTD"
-          enveloppe={enveloppeVideo}
-          ca={caVideo}
-          chargesTotal={chargesTotalVideo}
-          chargesReelles={chargesVideoTotal}
-          provisions={chargesProvRestantes * pctVideo}
-          salaires={salairesVideo}
-          pipeOpt={pipeOptVideo}
-          pipePon={pipePonVideo}
-          pipeRetenu={pipeRetenuVideo}
-        />
-        )}
-      </section>
-
-      {/* BLOC 4 — Projection + graphiques (masqué pour les pôles) */}
+      {/* BLOC 3 — Projection */}
       {!isPoleOnly && (
-      <section className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr_1fr]">
-        <BaseCard loading={loading} label="Projection fin d'année">
-          <p className="text-xl font-semibold text-foreground whitespace-nowrap">{fmtEUR(caProjecte)}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            CA réel YTD + objectifs mois restants
-          </p>
-          <ul className="mt-4 space-y-1.5 text-sm whitespace-nowrap">
-            <DetailRow label="CA réel YTD" value={fmtEUR(caTotal)} />
-            <DetailRow label="+ Objectifs mois restants" value={fmtEUR(objectifsMoisRestants)} />
-          </ul>
-          <hr className="my-3 border-border" />
-          <ul className="space-y-1.5 text-sm whitespace-nowrap">
-            <DetailRow label="Objectif annuel" value={fmtEUR(caObjectifGlobal)} />
-            <DetailRow
-              label="Écart projeté"
-              value={fmtEUR(ecartProjecte)}
-              valueClass={signClass(ecartProjecte)}
-            />
-            <DetailRow
-              label="% réalisation projeté"
-              value={`${(pctRealisationAnnuelProjecte * 100).toFixed(0)}%`}
-              valueClass={signClass(pctRealisationAnnuelProjecte - 1)}
-            />
-          </ul>
-          <hr className="my-3 border-border" />
-          <p className="text-xs italic text-muted-foreground">
-            Pipe attendu : {fmtEUR(pipeRetenuTotal)} — pour info, non intégré au calcul
-          </p>
-        </BaseCard>
-
-        <DashboardCharts
-          scope={graphScope}
-          revenus={revenus}
-          chargesReelles={chargesReelles}
-          objectifs={objectifs}
-          pctAudio={pctAudio}
-          pctVideo={pctVideo}
-          toggleNode={
-            <div className="flex gap-1">
-              {(["Global", "Audio", "Vidéo"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setGraphScope(s)}
-                  className={cn(
-                    "rounded border px-2 py-0.5 text-[11px] transition-colors",
-                    graphScope === s
-                      ? "border-border bg-muted text-foreground"
-                      : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {s}
-                </button>
-              ))}
+        <section>
+          <BaseCard loading={loading} label="Projection fin d'année">
+            <p className="text-3xl font-semibold text-foreground">{fmtEUR(caProjecte)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              CA réel YTD + objectifs mois restants
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Objectif annuel</p>
+                <p className="mt-1 text-base font-medium tabular-nums text-foreground">
+                  {fmtEUR(caObjectifGlobal)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Écart projeté</p>
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(ecartProjecte))}>
+                  {fmtEUR(ecartProjecte)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">% réalisation projeté</p>
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(pctRealisationAnnuelProjecte - 1))}>
+                  {(pctRealisationAnnuelProjecte * 100).toFixed(0)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Pipe attendu</p>
+                <p className="mt-1 text-base font-medium tabular-nums" style={{ color: C_ACCENT }}>
+                  {fmtEUR(pipeRetenuTotal)}
+                </p>
+              </div>
             </div>
-          }
-        />
-      </section>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Position saisonnière :{" "}
+              <span className={signClass(ecartPosition)}>
+                {ecartPosition * 100 >= 0 ? "+" : ""}
+                {(ecartPosition * 100).toFixed(0)}% vs rythme de l'année
+              </span>
+            </p>
+            <Collapsible>
+              <CollapsibleTrigger className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground [&[data-state=open]>svg]:rotate-180">
+                <ChevronDown className="h-3.5 w-3.5 transition-transform" />
+                Voir le détail
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <ul className="mt-3 space-y-1.5 text-sm">
+                  <DetailRow label="CA réel YTD" value={fmtEUR(caTotal)} />
+                  <DetailRow label="+ Objectifs mois restants" value={fmtEUR(objectifsMoisRestants)} />
+                </ul>
+              </CollapsibleContent>
+            </Collapsible>
+          </BaseCard>
+        </section>
+      )}
+
+      {/* BLOC 4 — Graphiques */}
+      {!isPoleOnly && (
+        <section className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <DashboardCharts
+            scope={graphScope}
+            revenus={revenus}
+            chargesReelles={chargesReelles}
+            objectifs={objectifs}
+            pctAudio={pctAudio}
+            pctVideo={pctVideo}
+            toggleNode={
+              <div className="flex gap-1">
+                {(["Global", "Audio", "Vidéo"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setGraphScope(s)}
+                    className={cn(
+                      "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                      graphScope === s
+                        ? "border-border bg-muted text-foreground"
+                        : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            }
+          />
+        </section>
       )}
     </div>
   );
