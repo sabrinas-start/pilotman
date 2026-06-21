@@ -281,11 +281,6 @@ function DashboardPage() {
           <p className="mt-1 text-xs text-muted-foreground">
             Optimiste + pondéré (taux appliqués)
           </p>
-          <ul className="mt-4 space-y-1.5 text-sm">
-            <DetailRow label="Pipe optimiste" value={fmtEUR(pipeOptTotal)} />
-            <SubDetail label="brut (Confirmé)" value={fmtEUR(pipeBrutTotal)} />
-            <DetailRow label="Pipe pondéré" value={fmtEUR(pipePonTotal)} />
-          </ul>
         </BaseCard>
       </section>
       )}
