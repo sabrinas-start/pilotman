@@ -79,6 +79,11 @@ function DashboardPage() {
   const objectifs = (objectifsQ.data?.[0]?.fields ?? {}) as Record<string, unknown>;
   const chargesReelles: AirtableRecord[] = chargesReellesQ.data ?? [];
   const chargesProv: AirtableRecord[] = chargesProvQ.data ?? [];
+  const pendingProvKeys = new Set(
+    chargesProv.map((r) => str(r.fields.cle_reconciliation)).filter(Boolean),
+  );
+  const estReconciliee = (r: AirtableRecord) =>
+    r.fields.est_fixe !== true || !pendingProvKeys.has(str(r.fields.cle_reconciliation));
   const revenus: AirtableRecord[] = revenusQ.data ?? [];
 
   // ── Calculs ──────────────────────────────────────────────────────────────
@@ -86,13 +91,17 @@ function DashboardPage() {
   const pctVideo = num(objectifs.pct_attribution_video);
 
   const chargesAudio = chargesReelles
-    .filter((r) => str(r.fields.categorie).startsWith("Tournage Son"))
+    .filter((r) => str(r.fields.categorie).startsWith("Tournage Son") && estReconciliee(r))
     .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
   const chargesVideo = chargesReelles
-    .filter((r) => str(r.fields.categorie).startsWith("Tournage Image"))
+    .filter((r) => str(r.fields.categorie).startsWith("Tournage Image") && estReconciliee(r))
     .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
 
-  const chargesReelTotal = num(metriques.charges_reel_total);
+  const chargesReelTotalBrut = num(metriques.charges_reel_total);
+  const reelFixeNonReconciliee = chargesReelles
+    .filter((r) => r.fields.est_fixe === true && pendingProvKeys.has(str(r.fields.cle_reconciliation)))
+    .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
+  const chargesReelTotal = chargesReelTotalBrut - reelFixeNonReconciliee;
   const chargesCommunes = chargesReelTotal - chargesAudio - chargesVideo;
   const chargesAudioTotal = chargesAudio + chargesCommunes * pctAudio;
   const chargesVideoTotal = chargesVideo + chargesCommunes * pctVideo;

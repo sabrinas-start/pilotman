@@ -89,14 +89,23 @@ function SimulateurPage() {
   const salaires: AirtableRecord[] = salairesQ.data ?? [];
 
   const real = useMemo(() => {
+    const pendingProvKeys = new Set(
+      chargesProv.map((r) => str(r.fields.cle_reconciliation)).filter(Boolean),
+    );
+    const estReconciliee = (r: AirtableRecord) =>
+      r.fields.est_fixe !== true || !pendingProvKeys.has(str(r.fields.cle_reconciliation));
     const moisCourant = new Date().getMonth() + 1;
     const cha = chargesReelles
-      .filter((r) => str(r.fields.categorie).startsWith("Tournage Son"))
+      .filter((r) => str(r.fields.categorie).startsWith("Tournage Son") && estReconciliee(r))
       .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
     const chv = chargesReelles
-      .filter((r) => str(r.fields.categorie).startsWith("Tournage Image"))
+      .filter((r) => str(r.fields.categorie).startsWith("Tournage Image") && estReconciliee(r))
       .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
-    const chReelTotal = num(metriques.charges_reel_total);
+    const chReelTotalBrut = num(metriques.charges_reel_total);
+    const reelFixeNonReconciliee = chargesReelles
+      .filter((r) => r.fields.est_fixe === true && pendingProvKeys.has(str(r.fields.cle_reconciliation)))
+      .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
+    const chReelTotal = chReelTotalBrut - reelFixeNonReconciliee;
     const chCom = chReelTotal - cha - chv;
 
     return {
@@ -128,7 +137,7 @@ function SimulateurPage() {
       ),
       dateSnapshot: str(metriques.date_snapshot) || "—",
     };
-  }, [metriques, objectifs, chargesReelles]);
+  }, [metriques, objectifs, chargesReelles, chargesProv]);
 
   // ── State ─────────────────────────────────────────────────────────────
   const [anneBlanche, setAnneBlanche] = useState(false);
