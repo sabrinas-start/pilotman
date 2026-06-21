@@ -233,6 +233,31 @@ function SalariesPage() {
         </Button>
       </div>
 
+      <div className="rounded-lg border border-border bg-card p-5">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+          Coûts mensuels — total masse salariale
+        </p>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={coutsParMois} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="#2e2e2e" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="mois" stroke="#888" tick={{ fontSize: 11, fill: "#888" }} />
+              <YAxis
+                stroke="#888"
+                tick={{ fontSize: 11, fill: "#888" }}
+                tickFormatter={(v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
+              />
+              <Tooltip
+                contentStyle={{ background: "#1f1f1f", border: "0.5px solid #2e2e2e", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "#F0F0F0" }}
+                formatter={(value: number) => [fmtEUR(value), "Total"]}
+              />
+              <Bar dataKey="total" fill="#E8C547" radius={[2, 2, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
