@@ -596,8 +596,8 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
               <Field label="% imputation">
                 <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
               </Field>
-              {isCDD && (
-                <Field label="Date de fin">
+              {!isGerant && (
+                <Field label="Date de fin (optionnel)">
                   <Input type="month" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
                 </Field>
               )}
