@@ -287,6 +287,7 @@ function SimulateurPage() {
     useState<Record<string, { montant: number; taux: number }>>({});
 
   const [seasonOpen, setSeasonOpen] = useState(false);
+  const [objectifsOpen, setObjectifsOpen] = useState(false);
   const [chargesFixesOpen, setChargesFixesOpen] = useState(false);
   const [salairesOpen, setSalairesOpen] = useState(false);
   const [chargesSimOpen, setChargesSimOpen] = useState(false);
