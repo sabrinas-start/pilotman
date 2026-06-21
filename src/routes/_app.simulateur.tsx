@@ -352,7 +352,6 @@ function SimulateurPage() {
     id: string;
     categorie: string;
     type_charge: string;
-    pole: "audio" | "video" | "global";
     montant: number;
     taux: number; // en %
   };
@@ -380,15 +379,10 @@ function SimulateurPage() {
     }
     return Array.from(groupes.entries()).map(([cle, g]) => {
       const montant = Math.round(g.somme * 100) / 100;
-      const pole: "audio" | "video" | "global" =
-        g.categorie.includes("Tournage Son") ? "audio"
-          : g.categorie.includes("Tournage Image") ? "video"
-          : "global";
       return {
         id: g.firstId || cle,
         categorie: g.categorie || g.type_charge,
         type_charge: g.type_charge,
-        pole,
         montant,
         taux: 100,
       };
