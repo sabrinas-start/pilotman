@@ -217,6 +217,15 @@ function SalariesPage() {
     return arr;
   }, [salaries, sortKey, sortDir]);
 
+  const totalMontantAnnuel = useMemo(
+    () => sortedSalaries.reduce((s, sal) => s + (montantAnnuelParSalarie[sal.nom] || 0), 0),
+    [sortedSalaries, montantAnnuelParSalarie],
+  );
+  const totalCteImputeAnnuel = useMemo(
+    () => sortedSalaries.reduce((s, sal) => s + sal.cte_annuel * sal.taux_imputation, 0),
+    [sortedSalaries],
+  );
+
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortKey(key); setSortDir("asc"); }
