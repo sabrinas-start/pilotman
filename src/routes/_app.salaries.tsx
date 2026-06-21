@@ -761,6 +761,23 @@ function EditSalarieModal({
   const [dateFin, setDateFin] = useState(salarie.date_fin ? salarie.date_fin.slice(0, 7) : "");
   const [loadingTaux, setLoadingTaux] = useState(false);
   const [loadingFin, setLoadingFin] = useState(false);
+  const [nom, setNom] = useState(salarie.nom);
+  const [loadingNom, setLoadingNom] = useState(false);
+
+  const submitNom = async () => {
+    const newNom = nom.trim();
+    if (!newNom || newNom === salarie.nom) return;
+    setLoadingNom(true);
+    try {
+      await airtablePatch(SALARIES_TABLE, salarie.id, { nom_salarie: newNom });
+      toast.success("Nom mis à jour ✓");
+      onDone();
+    } catch (e) {
+      toast.error("Erreur renommage", { description: String(e) });
+    } finally {
+      setLoadingNom(false);
+    }
+  };
 
   const submitTaux = async () => {
     if (!dateEffetTaux) {
@@ -830,9 +847,21 @@ function EditSalarieModal({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Mettre à jour — {salarie.nom}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
+            <span>Mettre à jour —</span>
+            <Input
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+              className="h-8 w-auto max-w-[200px] text-base font-semibold"
+            />
+            {nom.trim() !== salarie.nom && nom.trim() !== "" && (
+              <Button size="sm" onClick={submitNom} disabled={loadingNom}>
+                {loadingNom ? "…" : "Renommer"}
+              </Button>
+            )}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
