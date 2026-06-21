@@ -1645,22 +1645,31 @@ function ComparisonCard({ title, reel, simule, pole, right, children, footer, an
         <h3 className="text-sm font-medium" style={{ color: text ?? "var(--color-muted-foreground)" }}>{title}</h3>
         {right}
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Réel</p>
-          <p className={cn("text-xl font-semibold tabular-nums", signClass(reel))}>{fmtEUR(reel)}</p>
-        </div>
-        <div>
+      {anneBlanche ? (
+        <div className="mt-3">
           <p className="text-[10px] uppercase tracking-wide" style={{ color: C_ACCENT }}>Simulé</p>
-          <p className={cn("text-xl font-semibold tabular-nums", signClass(simule))}>{fmtEUR(simule)}</p>
+          <p className={cn("text-2xl font-semibold tabular-nums", signClass(simule))}>{fmtEUR(simule)}</p>
         </div>
-      </div>
-      <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
-        <span className="text-xs text-muted-foreground">Écart</span>
-        <span className="text-sm font-medium tabular-nums" style={{ color: ecartColor }}>
-          {sign}{fmtEUR(ecart)}
-        </span>
-      </div>
+      ) : (
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Réel</p>
+              <p className={cn("text-xl font-semibold tabular-nums", signClass(reel))}>{fmtEUR(reel)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: C_ACCENT }}>Simulé</p>
+              <p className={cn("text-xl font-semibold tabular-nums", signClass(simule))}>{fmtEUR(simule)}</p>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
+            <span className="text-xs text-muted-foreground">Écart</span>
+            <span className="text-sm font-medium tabular-nums" style={{ color: ecartColor }}>
+              {sign}{fmtEUR(ecart)}
+            </span>
+          </div>
+        </>
+      )}
       {children}
       {footer}
     </div>
