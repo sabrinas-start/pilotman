@@ -107,7 +107,34 @@ function SimulateurPage() {
       .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
     const chReelTotal = chReelTotalBrut - reelFixeNonReconciliee;
     const chCom = chReelTotal - cha - chv;
-...
+
+    return {
+      moisCourant,
+      caAudio: num(metriques.ca_reel_audio),
+      caVideo: num(metriques.ca_reel_video),
+      caPole: num(metriques.ca_reel_pole),
+      caTotal: num(metriques.ca_reel_total),
+      chReelTotal,
+      chargesAudio: cha,
+      chargesVideo: chv,
+      chargesCommunes: chCom,
+      pctAudio: num(objectifs.pct_attribution_audio),
+      pctVideo: num(objectifs.pct_attribution_video),
+      caObjectifAudio: num(objectifs.ca_objectif_audio),
+      caObjectifVideo: num(objectifs.ca_objectif_video),
+      reserve: num(objectifs.reserve_securite) || 0.2,
+      plancherAudio: num(objectifs.plancher_audio),
+      plafondAudio: num(objectifs.plafond_audio),
+      plancherVideo: num(objectifs.plancher_video),
+      plafondVideo: num(objectifs.plafond_video),
+      tauxOption: num(objectifs.taux_concretisation_option),
+      tauxConfirme: num(objectifs.taux_concretisation_confirme),
+      saisonAudio: Array.from({ length: 12 }, (_, i) =>
+        num(objectifs[`saisonnalite_audio_${String(i + 1).padStart(2, "0")}`]),
+      ),
+      saisonVideo: Array.from({ length: 12 }, (_, i) =>
+        num(objectifs[`saisonnalite_video_${String(i + 1).padStart(2, "0")}`]),
+      ),
       dateSnapshot: str(metriques.date_snapshot) || "—",
     };
   }, [metriques, objectifs, chargesReelles, chargesProv]);
