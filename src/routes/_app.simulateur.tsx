@@ -352,7 +352,6 @@ function SimulateurPage() {
     id: string;
     categorie: string;
     type_charge: string;
-    pole: "audio" | "video" | "global";
     montant: number;
     taux: number; // en %
   };
@@ -380,15 +379,10 @@ function SimulateurPage() {
     }
     return Array.from(groupes.entries()).map(([cle, g]) => {
       const montant = Math.round(g.somme * 100) / 100;
-      const pole: "audio" | "video" | "global" =
-        g.categorie.includes("Tournage Son") ? "audio"
-          : g.categorie.includes("Tournage Image") ? "video"
-          : "global";
       return {
         id: g.firstId || cle,
         categorie: g.categorie || g.type_charge,
         type_charge: g.type_charge,
-        pole,
         montant,
         taux: 100,
       };
@@ -446,7 +440,7 @@ function SimulateurPage() {
   const caReelAudio = (anneBlanche ? 0 : real.caAudio) + _simRevenusAudio;
   const caReelVideo = (anneBlanche ? 0 : real.caVideo) + _simRevenusVideo;
   const caReelTotal = (anneBlanche ? 0 : real.caTotal) + _simRevenusAudio + _simRevenusVideo;
-  const caReelPole = anneBlanche ? 0 : real.caPole;
+  
 
   // Charges réelles
   const chReelTotalEff = anneBlanche ? 0 : real.chReelTotal;
@@ -1526,62 +1520,6 @@ function ScopeToggle({ scope, setScope }: { scope: Scope; setScope: (s: Scope) =
           {o.l}
         </button>
       ))}
-    </div>
-  );
-}
-
-function MetricCard({ title, badge, children }: { title: string; badge?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{title}</p>
-        {badge && (
-          <span className="rounded px-1.5 py-0.5 text-[10px] font-medium"
-            style={{ backgroundColor: "rgba(232,197,71,0.15)", color: C_ACCENT }}>Simulé</span>
-        )}
-      </div>
-      <div className="mt-2">{children}</div>
-    </div>
-  );
-}
-
-function PoleLine({ label, value, pole }: { label: string; value: string; pole?: Pole }) {
-  const { bg, text } = poleColor(pole);
-  return (
-    <li
-      className="flex items-center justify-between rounded px-2 py-1"
-      style={pole ? { backgroundColor: bg, color: text } : { color: "var(--color-muted-foreground)" }}
-    >
-      <span>{label}</span>
-      <span className="font-medium tabular-nums" style={pole ? { color: text } : { color: "var(--color-foreground)" }}>
-        {value}
-      </span>
-    </li>
-  );
-}
-
-function EnvelopeCard({ pole, title, value, ca, charges }: {
-  pole: Pole; title: string; value: number; ca: number; charges: number;
-}) {
-  const { bg, text } = poleColor(pole);
-  return (
-    <div className="rounded-lg border border-border p-5" style={{ backgroundColor: bg }}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium" style={{ color: text }}>{title}</h3>
-        <span className="rounded px-1.5 py-0.5 text-[10px] font-medium"
-          style={{ backgroundColor: "rgba(232,197,71,0.15)", color: C_ACCENT }}>Simulé</span>
-      </div>
-      <p className={cn("mt-2 text-3xl font-semibold", signClass(value))}>{fmtEUR(value)}</p>
-      <dl className="mt-6 space-y-2 text-sm">
-        <div className="flex items-center justify-between">
-          <dt className="text-muted-foreground">CA réel</dt>
-          <dd className="font-medium text-foreground">{fmtEUR(ca)}</dd>
-        </div>
-        <div className="flex items-center justify-between">
-          <dt className="text-muted-foreground">Charges</dt>
-          <dd className="font-medium text-foreground">{fmtEUR(charges)}</dd>
-        </div>
-      </dl>
     </div>
   );
 }
