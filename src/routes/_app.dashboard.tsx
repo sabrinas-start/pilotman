@@ -300,15 +300,17 @@ function DashboardPage() {
     caObjectif: caObjectifGlobal,
   };
 
-  const selectedVar =
-    cardsScope === "Audio" ? audioVar : cardsScope === "Vidéo" ? videoVar : globalVar;
-  const scopeSuffix =
-    cardsScope === "Audio" ? "Audio" : cardsScope === "Vidéo" ? "Vidéo" : "globale";
-  const capaciteTitle = `💡 Enveloppe ${scopeSuffix} · Capacité d'investissement`;
+  const pickVar = (s: "Global" | "Audio" | "Vidéo") =>
+    s === "Audio" ? audioVar : s === "Vidéo" ? videoVar : globalVar;
+  const capaciteVar = pickVar(capaciteScope);
+  const projectionVar = pickVar(projectionScope);
+  const capaciteSuffix =
+    capaciteScope === "Audio" ? "Audio" : capaciteScope === "Vidéo" ? "Vidéo" : "globale";
+  const capaciteTitle = `💡 Enveloppe ${capaciteSuffix} · Capacité d'investissement`;
   const projectionTitle =
-    cardsScope === "Global"
+    projectionScope === "Global"
       ? "Projection fin d'année"
-      : `Projection fin d'année · ${cardsScope}`;
+      : `Projection fin d'année · ${projectionScope}`;
 
   const dateSnapshot = str(metriques.date_snapshot) || "—";
 
