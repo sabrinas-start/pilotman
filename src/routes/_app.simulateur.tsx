@@ -92,8 +92,22 @@ function SimulateurPage() {
     const pendingProvKeys = new Set(
       chargesProv.map((r) => str(r.fields.cle_reconciliation)).filter(Boolean),
     );
-    const estReconciliee = (r: AirtableRecord) =>
-      r.fields.est_fixe !== true || !pendingProvKeys.has(str(r.fields.cle_reconciliation));
+
+    function cleReelle(r: AirtableRecord): string {
+      const typeCharge = str(r.fields.type_charge);
+      const categorie = str(r.fields.categorie);
+      if (typeCharge === "Assurance") return categorie || typeCharge;
+      if (typeCharge === "Frais locaux" && categorie === "Autres") return "Autres";
+      return typeCharge;
+    }
+
+    const estReconciliee = (r: AirtableRecord) => {
+      if (r.fields.est_fixe !== true) return true;
+      const cle = cleReelle(r);
+      const mois = num(r.fields.mois);
+      const annee = num(r.fields.annee);
+      return !pendingProvKeys.has(`${cle}_${mois}_${annee}`) && !pendingProvKeys.has(`${cle}_${annee}`);
+    };
     const moisCourant = new Date().getMonth() + 1;
     const cha = chargesReelles
       .filter((r) => str(r.fields.categorie).startsWith("Tournage Son") && estReconciliee(r))
