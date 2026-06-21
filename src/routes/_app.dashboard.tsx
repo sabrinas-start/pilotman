@@ -747,6 +747,7 @@ function CalcLine({
 }
 
 function CapaciteCard({
+  title,
   caTotal,
   caObjectifYTD,
   surplus,
@@ -759,6 +760,7 @@ function CapaciteCard({
   montantReserve,
   indicateur2,
 }: {
+  title?: string;
   caTotal: number;
   caObjectifYTD: number;
   surplus: number;
@@ -778,7 +780,7 @@ function CapaciteCard({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            💡 Enveloppe globale · Capacité d'investissement
+            {title ?? "💡 Enveloppe globale · Capacité d'investissement"}
           </p>
           <p className={cn("mt-2 text-4xl font-semibold", signClass(indicateur2))}>
             {fmtEUR(indicateur2)}
