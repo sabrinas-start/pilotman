@@ -307,6 +307,7 @@ function SimulateurPage() {
     setSaisonAudio(real.saisonAudio.map((v) => v * 100));
     setSaisonVideo(real.saisonVideo.map((v) => v * 100));
     setSimCharges([]);
+    setSimRevenus([]);
   };
 
   useEffect(() => {
