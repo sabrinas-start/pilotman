@@ -153,6 +153,17 @@ type SortDir = "asc" | "desc";
 
 function SalariesPage() {
   const salariesQ = useAirtable(SALARIES_TABLE, {});
+  const coutsMoisQ = useAirtable(SALARIES_MOIS_TABLE, {
+    filterByFormula: `{annee}=${ANNEE}`,
+  });
+  const coutsParMois = useMemo(() => {
+    const totaux = Array(12).fill(0);
+    (coutsMoisQ.data ?? []).forEach((r) => {
+      const m = num(r.fields.mois);
+      if (m >= 1 && m <= 12) totaux[m - 1] += num(r.fields.montant_impute);
+    });
+    return MOIS_LABELS.map((label, i) => ({ mois: label.slice(0, 3), total: totaux[i] }));
+  }, [coutsMoisQ.data]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editSalarie, setEditSalarie] = useState<Salarie | null>(null);
