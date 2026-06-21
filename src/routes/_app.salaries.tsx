@@ -164,6 +164,17 @@ function SalariesPage() {
     });
     return MOIS_LABELS.map((label, i) => ({ mois: label.slice(0, 3), total: totaux[i] }));
   }, [coutsMoisQ.data]);
+  const coutsAnnuelsQ = useAirtable(SALARIES_MOIS_TABLE, {
+    filterByFormula: `{annee}=${ANNEE}`,
+  });
+  const montantAnnuelParSalarie = useMemo(() => {
+    const totaux: Record<string, number> = {};
+    (coutsAnnuelsQ.data ?? []).forEach((r) => {
+      const nom = str(r.fields.nom_salarie);
+      totaux[nom] = (totaux[nom] || 0) + num(r.fields.montant_impute);
+    });
+    return totaux;
+  }, [coutsAnnuelsQ.data]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editSalarie, setEditSalarie] = useState<Salarie | null>(null);
@@ -205,6 +216,15 @@ function SalariesPage() {
     });
     return arr;
   }, [salaries, sortKey, sortDir]);
+
+  const totalMontantAnnuel = useMemo(
+    () => sortedSalaries.reduce((s, sal) => s + (montantAnnuelParSalarie[sal.nom] || 0), 0),
+    [sortedSalaries, montantAnnuelParSalarie],
+  );
+  const totalCteImputeAnnuel = useMemo(
+    () => sortedSalaries.reduce((s, sal) => s + sal.cte_annuel * sal.taux_imputation, 0),
+    [sortedSalaries],
+  );
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -268,20 +288,22 @@ function SalariesPage() {
               <SortableTh k="date_fin">Date fin</SortableTh>
               <SortableTh k="cte_annuel" align="right">CTE annuel</SortableTh>
               <SortableTh k="taux_imputation" align="right">% imputation</SortableTh>
+              <SortableTh k="cte_annuel" align="right">Montant annuel imputé</SortableTh>
+              <SortableTh k="cte_annuel" align="right">CTE imputé annuel</SortableTh>
               <th className="px-4 py-3 w-10" />
             </tr>
           </thead>
           <tbody>
             {salariesQ.loading && (
               <tr>
-                <td colSpan={7} className="p-4">
+                <td colSpan={9} className="p-4">
                   <Skeleton className="h-8 w-full" />
                 </td>
               </tr>
             )}
             {!salariesQ.loading && salaries.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
                   Aucun salarié actif. Cliquez sur "Ajouter un salarié" pour commencer.
                 </td>
               </tr>
@@ -295,6 +317,7 @@ function SalariesPage() {
                   salarie={s}
                   badge={badge}
                   isOpen={isOpen}
+                  montantAnnuelParSalarie={montantAnnuelParSalarie}
                   onToggle={() => setExpanded(isOpen ? null : s.id)}
                   onEdit={() => setEditSalarie(s)}
                   onDelete={() => setDeleteSalarie(s)}
@@ -303,6 +326,14 @@ function SalariesPage() {
               );
             })}
           </tbody>
+          <tfoot className="border-t-2 border-border bg-muted/20 font-medium">
+            <tr>
+              <td className="px-4 py-3" colSpan={6}>Total</td>
+              <td className="px-4 py-3 text-right tabular-nums">{fmtEUR(totalMontantAnnuel)}</td>
+              <td className="px-4 py-3 text-right tabular-nums">{fmtEUR(totalCteImputeAnnuel)}</td>
+              <td className="px-4 py-3" />
+            </tr>
+          </tfoot>
         </table>
       </div>
 
@@ -343,6 +374,7 @@ function ExpandableRow({
   salarie,
   badge,
   isOpen,
+  montantAnnuelParSalarie,
   onToggle,
   onEdit,
   onDelete,
@@ -351,6 +383,7 @@ function ExpandableRow({
   salarie: Salarie;
   badge: { bg: string; color: string; label: string };
   isOpen: boolean;
+  montantAnnuelParSalarie: Record<string, number>;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -375,13 +408,19 @@ function ExpandableRow({
         <td className="px-4 py-3 text-muted-foreground">{salarie.date_fin ? fmtMonthYear(salarie.date_fin) : "—"}</td>
         <td className="px-4 py-3 text-right tabular-nums">{fmtEUR(salarie.cte_annuel)}</td>
         <td className="px-4 py-3 text-right tabular-nums">{fmtPct(salarie.taux_imputation)}</td>
+        <td className="px-4 py-3 text-right tabular-nums">
+          {fmtEUR(montantAnnuelParSalarie[salarie.nom] || 0)}
+        </td>
+        <td className="px-4 py-3 text-right tabular-nums">
+          {fmtEUR(salarie.cte_annuel * salarie.taux_imputation)}
+        </td>
         <td className="px-4 py-3 text-muted-foreground">
           {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </td>
       </tr>
       {isOpen && (
         <tr className="border-t border-border bg-muted/10">
-          <td colSpan={7} className="px-4 py-4">
+          <td colSpan={9} className="px-4 py-4">
             <ExpandedContent
               salarie={salarie}
               onEdit={onEdit}
