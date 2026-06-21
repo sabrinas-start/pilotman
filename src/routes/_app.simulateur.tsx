@@ -667,6 +667,20 @@ function SimulateurPage() {
     setSimCharges((p) => p.filter((c) => c.id !== id));
   };
 
+  // Revenu helpers (même pattern que simCharges)
+  const addRevenu = () => {
+    setSimRevenus((p) => [
+      ...p,
+      { id: Math.random().toString(36).slice(2), label: "", montant: 0, pole: "global" },
+    ]);
+  };
+  const updateRevenu = (id: string, patch: Partial<SimCharge>) => {
+    setSimRevenus((p) => p.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  };
+  const removeRevenu = (id: string) => {
+    setSimRevenus((p) => p.filter((c) => c.id !== id));
+  };
+
   const SimuleBadge = () => (
     <span
       className="rounded px-1.5 py-0.5 text-[10px] font-medium"
