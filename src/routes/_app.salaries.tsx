@@ -387,6 +387,7 @@ function ExpandedContent({
         fonpeps_mensuel: num(f.fonpeps_mensuel),
         taux_imputation: num(f.taux_imputation),
         montant_impute: num(f.montant_impute),
+        montant_prime: num(f.montant_prime),
       };
     });
   }, [moisQ.data]);
