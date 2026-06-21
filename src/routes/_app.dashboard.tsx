@@ -695,11 +695,7 @@ function PoleCard({
                 {fmtEUR(ca)}
               </span>
             </li>
-            <DetailRow
-              label="Solde réel"
-              value={fmtEUR(solde)}
-              valueClass={signClass(solde)}
-            />
+            <DetailRow label="Charges totales" value={fmtEUR(chargesTotal)} />
           </ul>
           <Collapsible>
             <CollapsibleTrigger className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground [&[data-state=open]>svg]:rotate-180">
@@ -708,12 +704,12 @@ function PoleCard({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <ul className="mt-3 space-y-1.5 text-sm">
-                <DetailRow label="Charges totales" value={fmtEUR(chargesTotal)} />
                 <SubDetail label="dont réelles" value={fmtEUR(chargesReelles)} />
                 <SubDetail label="dont provisions" value={fmtEUR(provisions)} />
                 <SubDetail label="dont salaires" value={fmtEUR(salaires)} />
               </ul>
               <hr className="my-3 border-border" />
+
               <ul className="space-y-1.5 text-sm">
                 <li className="flex items-center justify-between">
                   <span className="text-muted-foreground">Pipe retenu</span>
