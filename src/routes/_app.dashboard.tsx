@@ -5,6 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { useAuth } from "@/contexts/AuthContext";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Tableau de bord — Pôle Tournage" }] }),
