@@ -1,3 +1,4 @@
+import "@tanstack/start-client-core";
 import { createFileRoute } from "@tanstack/react-router";
 
 const AIRTABLE_BASE_ID = "apprsfZ8SqimnvbU8";
