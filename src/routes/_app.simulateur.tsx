@@ -1534,8 +1534,9 @@ function CalcRow({ op, label, value, semantic, bold }: {
   );
 }
 
-function ComparisonCard({ title, reel, simule, pole, right }: {
+function ComparisonCard({ title, reel, simule, pole, right, children, footer }: {
   title: string; reel: number; simule: number; pole?: Pole; right?: React.ReactNode;
+  children?: React.ReactNode; footer?: React.ReactNode;
 }) {
   const ecart = simule - reel;
   const { bg, text } = poleColor(pole);
@@ -1565,6 +1566,21 @@ function ComparisonCard({ title, reel, simule, pole, right }: {
           {sign}{fmtEUR(ecart)}
         </span>
       </div>
+      {children}
+      {footer}
+    </div>
+  );
+}
+
+function CompareRow({ label, reel, simule, semantic }: {
+  label: string; reel: number; simule: number; semantic?: boolean;
+}) {
+  const cls = (n: number) => semantic ? signClass(n) : "text-foreground";
+  return (
+    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 py-1 text-xs">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={cn("w-24 text-right tabular-nums", cls(reel))}>{fmtEUR(reel)}</span>
+      <span className={cn("w-24 text-right tabular-nums", cls(simule))}>{fmtEUR(simule)}</span>
     </div>
   );
 }
