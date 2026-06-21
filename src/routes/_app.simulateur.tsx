@@ -572,7 +572,6 @@ function SimulateurPage() {
     };
   }, [real, chargesProv, salaires, scope]);
   const kpisBaseline = calculerKpis(paramsBaseline);
-  void kpisBaseline; // calculé pour comparaison future, pas encore affiché
 
   // Destructurations — conservent les noms utilisés dans le rendu
   const { capacite, capDetail, projAudio, projVideo, projTotal,
