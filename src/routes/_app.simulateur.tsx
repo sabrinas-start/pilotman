@@ -839,6 +839,7 @@ function SimulateurPage() {
           )}
         </div>
 
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Charges fixes par catégorie */}
         <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
           <div className="flex items-center justify-between gap-3">
@@ -920,30 +921,38 @@ function SimulateurPage() {
                                   />
                                   <span>{r.categorie || r.type_charge}</span>
                                 </div>
-                                <Input
-                                  type="number"
-                                  value={montant}
-                                  onChange={(ev) => {
-                                    const v = Number(ev.target.value) || 0;
-                                    setChargesFixesEdit((p) => ({
-                                      ...p,
-                                      [r.id]: { montant: v, taux: p[r.id]?.taux ?? r.taux },
-                                    }));
-                                  }}
-                                  className="h-8 text-right tabular-nums"
-                                />
-                                <Input
-                                  type="number"
-                                  value={taux}
-                                  onChange={(ev) => {
-                                    const v = Number(ev.target.value) || 0;
-                                    setChargesFixesEdit((p) => ({
-                                      ...p,
-                                      [r.id]: { montant: p[r.id]?.montant ?? r.montant, taux: v },
-                                    }));
-                                  }}
-                                  className="h-8 text-right tabular-nums"
-                                />
+                                <div className="relative">
+                                  <Input
+                                    type="number"
+                                    value={montant}
+                                    onChange={(ev) => {
+                                      const v = Number(ev.target.value) || 0;
+                                      setChargesFixesEdit((p) => ({
+                                        ...p,
+                                        [r.id]: { montant: v, taux: p[r.id]?.taux ?? r.taux },
+                                      }));
+                                    }}
+                                    onWheel={(ev) => (ev.target as HTMLInputElement).blur()}
+                                    className="h-8 pr-6 text-right tabular-nums"
+                                  />
+                                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">€</span>
+                                </div>
+                                <div className="relative">
+                                  <Input
+                                    type="number"
+                                    value={taux}
+                                    onChange={(ev) => {
+                                      const v = Number(ev.target.value) || 0;
+                                      setChargesFixesEdit((p) => ({
+                                        ...p,
+                                        [r.id]: { montant: p[r.id]?.montant ?? r.montant, taux: v },
+                                      }));
+                                    }}
+                                    onWheel={(ev) => (ev.target as HTMLInputElement).blur()}
+                                    className="h-8 pr-6 text-right tabular-nums"
+                                  />
+                                  <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">%</span>
+                                </div>
                                 <div className="text-right text-sm tabular-nums text-foreground">{fmtEUR(impute)}</div>
                                 <div className="text-right text-xs text-muted-foreground">{poleLabel}</div>
                               </div>
@@ -1014,30 +1023,38 @@ function SimulateurPage() {
                         />
                         <span>{r.nom}</span>
                       </div>
-                      <Input
-                        type="number"
-                        value={montant}
-                        onChange={(ev) => {
-                          const v = Number(ev.target.value) || 0;
-                          setSalairesEdit((p) => ({
-                            ...p,
-                            [r.id]: { montant: v, taux: p[r.id]?.taux ?? r.taux },
-                          }));
-                        }}
-                        className="h-8 text-right tabular-nums"
-                      />
-                      <Input
-                        type="number"
-                        value={taux}
-                        onChange={(ev) => {
-                          const v = Number(ev.target.value) || 0;
-                          setSalairesEdit((p) => ({
-                            ...p,
-                            [r.id]: { montant: p[r.id]?.montant ?? r.montant, taux: v },
-                          }));
-                        }}
-                        className="h-8 text-right tabular-nums"
-                      />
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          value={montant}
+                          onChange={(ev) => {
+                            const v = Number(ev.target.value) || 0;
+                            setSalairesEdit((p) => ({
+                              ...p,
+                              [r.id]: { montant: v, taux: p[r.id]?.taux ?? r.taux },
+                            }));
+                          }}
+                          onWheel={(ev) => (ev.target as HTMLInputElement).blur()}
+                          className="h-8 pr-6 text-right tabular-nums"
+                        />
+                        <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">€</span>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          value={taux}
+                          onChange={(ev) => {
+                            const v = Number(ev.target.value) || 0;
+                            setSalairesEdit((p) => ({
+                              ...p,
+                              [r.id]: { montant: p[r.id]?.montant ?? r.montant, taux: v },
+                            }));
+                          }}
+                          onWheel={(ev) => (ev.target as HTMLInputElement).blur()}
+                          className="h-8 pr-6 text-right tabular-nums"
+                        />
+                        <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">%</span>
+                      </div>
                       <div className="text-right text-sm tabular-nums text-foreground">{fmtEUR(impute)}</div>
                     </div>
                   );
@@ -1046,7 +1063,9 @@ function SimulateurPage() {
             </div>
           )}
         </div>
+        </div>
 
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Charges simulées */}
         <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
           <div className="flex items-center justify-between gap-3">
@@ -1190,6 +1209,7 @@ function SimulateurPage() {
             </div>
           )}
         </div>
+        </div>
 
         {/* ─── Résultats ─── */}
         {anneBlanche ? (
@@ -1203,7 +1223,7 @@ function SimulateurPage() {
             </MetricCard>
           </section>
         ) : (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_3fr]">
             <ComparisonCard
               title="Projection fin d'année"
               reel={kpisBaseline.projTotal}
