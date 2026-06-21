@@ -753,70 +753,73 @@ function SimulateurPage() {
   );
 
   return (
-    <div className="-m-8 flex min-h-screen" style={{ backgroundColor: "#161616" }}>
-      {/* ─────────── Sidebar gauche ─────────── */}
-      <aside
-        className="sticky top-0 flex h-screen w-[240px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-border p-4"
-        style={{ backgroundColor: "#12121A" }}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-foreground">Paramètres</h2>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
-            title="Recharger depuis Airtable"
-          >
-            <RotateCcw className="h-3 w-3" />
-            Reset
-          </button>
-        </div>
-
-        {/* Année blanche */}
-        <div className="flex items-center justify-between rounded-md border border-border p-2">
-          <span className="text-xs text-foreground">Année blanche (réalisé = 0)</span>
-          <Switch checked={anneBlanche} onCheckedChange={setAnneBlanche} />
-        </div>
-
-        {/* Paramètres annuels */}
-        <Section title="Paramètres annuels">
-          <Field label="CA objectif Audio" suffix="€" value={caObjAudio} onChange={setCaObjAudio} pole="audio" />
-          <Field label="CA objectif Vidéo" suffix="€" value={caObjVideo} onChange={setCaObjVideo} pole="video" />
-          <Readonly label="CA objectif Global" value={fmtEUR(caObjGlobal)} />
-          <Field label="% attribution Audio" suffix="%" value={pctAudio} onChange={setPctAudio} pole="audio" />
-          <Readonly label={`→ Vidéo : ${pctVideo.toFixed(0)} %`} value="" pole="video" tiny />
-          <Field label="Réserve de sécurité" suffix="%" value={reserve} onChange={setReserve} />
-        </Section>
-
-        {/* Garde-fous */}
-        <Section title="Garde-fous enveloppe">
-          <span className="text-[10px] uppercase tracking-wide" style={{ color: "#94a3b8" }}>Audio</span>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Plancher" suffix="€" value={plancherAudio} onChange={setPlancherAudio} compact />
-            <Field label="Plafond" suffix="€" value={plafondAudio} onChange={setPlafondAudio} compact />
-          </div>
-          <span className="text-[10px] uppercase tracking-wide" style={{ color: "#9da4e8" }}>Vidéo</span>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Plancher" suffix="€" value={plancherVideo} onChange={setPlancherVideo} compact />
-            <Field label="Plafond" suffix="€" value={plafondVideo} onChange={setPlafondVideo} compact />
-          </div>
-        </Section>
-
-        <Section title="Taux de concrétisation">
-          <Field label="Taux Option" suffix="%" value={tauxOption} onChange={setTauxOption} />
-          <Field label="Taux Confirmé" suffix="%" value={tauxConfirme} onChange={setTauxConfirme} />
-        </Section>
-      </aside>
-
-      {/* ─────────── Zone droite ─────────── */}
-      <div className="flex-1 p-6 space-y-4">
+    <div className="-m-8 min-h-screen" style={{ backgroundColor: "#161616" }}>
+      <div className="p-6 space-y-4">
         <header className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold text-foreground">Simulateur · {ANNEE}</h1>
           <SimuleBadge />
           {anneBlanche && (
             <span className="text-xs text-muted-foreground">Mode année blanche</span>
           )}
+          <div className="ml-auto flex items-center gap-3">
+            <label className="flex items-center gap-2 rounded-md border border-border px-2 py-1">
+              <span className="text-xs text-foreground">Année blanche (réalisé = 0)</span>
+              <Switch checked={anneBlanche} onCheckedChange={setAnneBlanche} />
+            </label>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
+              title="Recharger depuis Airtable"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Reset
+            </button>
+          </div>
         </header>
+
+        {/* Objectifs & répartition */}
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #6B7280", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
+          <button
+            type="button"
+            onClick={() => setObjectifsOpen((o) => !o)}
+            className="flex w-full items-center gap-2 text-sm font-medium text-foreground"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform", objectifsOpen && "rotate-180")} />
+            Objectifs &amp; répartition
+          </button>
+          {objectifsOpen && (
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Section title="Paramètres annuels">
+                <Field label="CA objectif Audio" suffix="€" value={caObjAudio} onChange={setCaObjAudio} pole="audio" />
+                <Field label="CA objectif Vidéo" suffix="€" value={caObjVideo} onChange={setCaObjVideo} pole="video" />
+                <Readonly label="CA objectif Global" value={fmtEUR(caObjGlobal)} />
+                <Field label="% attribution Audio" suffix="%" value={pctAudio} onChange={setPctAudio} pole="audio" />
+                <Readonly label={`→ Vidéo : ${pctVideo.toFixed(0)} %`} value="" pole="video" tiny />
+                <Field label="Réserve de sécurité" suffix="%" value={reserve} onChange={setReserve} />
+              </Section>
+
+              <Section title="Garde-fous enveloppe">
+                <span className="text-[10px] uppercase tracking-wide" style={{ color: "#94a3b8" }}>Audio</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Plancher" suffix="€" value={plancherAudio} onChange={setPlancherAudio} compact />
+                  <Field label="Plafond" suffix="€" value={plafondAudio} onChange={setPlafondAudio} compact />
+                </div>
+                <span className="text-[10px] uppercase tracking-wide" style={{ color: "#9da4e8" }}>Vidéo</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Plancher" suffix="€" value={plancherVideo} onChange={setPlancherVideo} compact />
+                  <Field label="Plafond" suffix="€" value={plafondVideo} onChange={setPlafondVideo} compact />
+                </div>
+              </Section>
+
+              <Section title="Taux de concrétisation">
+                <Field label="Taux Option" suffix="%" value={tauxOption} onChange={setTauxOption} />
+                <Field label="Taux Confirmé" suffix="%" value={tauxConfirme} onChange={setTauxConfirme} />
+              </Section>
+            </div>
+          )}
+        </div>
+
 
         {/* Saisonnalité */}
         <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #1D9E75", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
