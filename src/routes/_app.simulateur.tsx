@@ -1303,7 +1303,7 @@ function SimulateurPage() {
                     capacite={kpisBaseline.capacite[scope]}
                     reservePct={real.reserve * 100}
                     pctAnneeEcoulee={
-                      real.saisonAudio.slice(0, real.moisCourant).reduce((s, v) => s + v, 0)
+                      real.saisonAudio.slice(0, real.moisCourant).reduce((s, v) => s + v, 0) * 100
                     }
                   />
                   <CapDetailCol
