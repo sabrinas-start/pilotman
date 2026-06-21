@@ -7,13 +7,17 @@ const LS_KEY = "lapuce_alertes_derniere_visite";
 
 export function NotificationBell() {
   const navigate = useNavigate();
-  const { data } = useAirtable("tbl4uCRY4qeiRxpV4", {
-    filterByFormula: `OR({type_evenement}='warning',{type_evenement}='error')`,
+
+  const { data: logs } = useAirtable("tbl4uCRY4qeiRxpV4", {
+    filterByFormula: `{type_evenement}='error'`,
     sort: [{ field: "timestamp", direction: "desc" }],
   });
 
+  const { data: charges } = useAirtable("tbljefhnPsyTAgUA4", {
+    filterByFormula: `{warning}=TRUE()`,
+  });
+
   const { count, hasError } = useMemo(() => {
-    if (!data) return { count: 0, hasError: false };
     let last = 0;
     if (typeof window !== "undefined") {
       const raw = window.localStorage.getItem(LS_KEY);
@@ -22,16 +26,28 @@ export function NotificationBell() {
     }
     let count = 0;
     let hasError = false;
-    for (const r of data) {
-      const ts = Date.parse(String(r.fields.timestamp ?? ""));
-      if (!Number.isFinite(ts)) continue;
-      if (ts > last) {
-        count++;
-        if (r.fields.type_evenement === "error") hasError = true;
+
+    if (logs) {
+      for (const r of logs) {
+        const ts = Date.parse(String(r.fields.timestamp ?? ""));
+        if (!Number.isFinite(ts)) continue;
+        if (ts > last) {
+          count++;
+          hasError = true;
+        }
       }
     }
+
+    if (charges) {
+      for (const r of charges) {
+        const ts = Date.parse(String(r.createdTime ?? ""));
+        if (!Number.isFinite(ts)) continue;
+        if (ts > last) count++;
+      }
+    }
+
     return { count, hasError };
-  }, [data]);
+  }, [logs, charges]);
 
   return (
     <button
