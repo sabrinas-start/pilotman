@@ -909,6 +909,94 @@ function SimulateurPage() {
           )}
         </div>
 
+        {/* Salaires par salarié */}
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820" }}>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setSalairesOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-medium text-foreground"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", salairesOpen && "rotate-180")} />
+              Salaires par salarié
+              <span className="text-xs text-muted-foreground">
+                ({fmtEUR(sumSalAnnuel)} / an)
+              </span>
+            </button>
+            {salairesOpen && (
+              <button
+                type="button"
+                onClick={resetSalaires}
+                className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Réinitialiser ce tableau
+              </button>
+            )}
+          </div>
+          {salairesOpen && (
+            <div className="mt-4">
+              <div className="hidden grid-cols-[1.4fr_120px_90px_120px] gap-3 pb-2 text-[11px] uppercase tracking-wide text-muted-foreground md:grid">
+                <div>Salarié</div>
+                <div className="text-right">Montant annuel</div>
+                <div className="text-right">Taux</div>
+                <div className="text-right">Imputé</div>
+              </div>
+              <div className="space-y-1.5">
+                {salairesBase.map((r) => {
+                  const e = salairesEdit[r.id];
+                  const montant = e?.montant ?? r.montant;
+                  const taux = e?.taux ?? r.taux;
+                  const impute = montant * (taux / 100);
+                  const modifie = !!e && (e.montant !== r.montant || e.taux !== r.taux);
+                  return (
+                    <div
+                      key={r.id}
+                      className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_120px_90px_120px] md:gap-3"
+                    >
+                      <div className="flex items-center gap-2 text-sm text-foreground">
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            modifie ? "bg-sky-400" : "bg-transparent",
+                          )}
+                          aria-hidden
+                        />
+                        <span>{r.nom}</span>
+                      </div>
+                      <Input
+                        type="number"
+                        value={montant}
+                        onChange={(ev) => {
+                          const v = Number(ev.target.value) || 0;
+                          setSalairesEdit((p) => ({
+                            ...p,
+                            [r.id]: { montant: v, taux: p[r.id]?.taux ?? r.taux },
+                          }));
+                        }}
+                        className="h-8 text-right tabular-nums"
+                      />
+                      <Input
+                        type="number"
+                        value={taux}
+                        onChange={(ev) => {
+                          const v = Number(ev.target.value) || 0;
+                          setSalairesEdit((p) => ({
+                            ...p,
+                            [r.id]: { montant: p[r.id]?.montant ?? r.montant, taux: v },
+                          }));
+                        }}
+                        className="h-8 text-right tabular-nums"
+                      />
+                      <div className="text-right text-sm tabular-nums text-foreground">{fmtEUR(impute)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Cartes métriques */}
         {anneBlanche ? (
           <section className="grid grid-cols-1 gap-4">
