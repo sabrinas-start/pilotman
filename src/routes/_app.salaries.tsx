@@ -536,7 +536,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
           fonpeps_annuel: parseFloat(fonpepsAnnuel) || 0,
           taux_imputation: (parseFloat(taux) || 0) / 100,
         };
-        if (isCDD && dateFin) fields.date_fin_charge = `${dateFin}-01`;
+        if (!isGerant && dateFin) fields.date_fin_charge = `${dateFin}-01`;
         const created = await airtablePost(SALARIES_TABLE, fields);
         const recordId = (created.id ?? created.records?.[0]?.id) as string;
         // call webhook
@@ -546,7 +546,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
           body: JSON.stringify({
             salarie_record_id: recordId,
             date_effet: `${dateDem}-01`,
-            date_fin_charge: isCDD && dateFin ? `${dateFin}-01` : null,
+            date_fin_charge: !isGerant && dateFin ? `${dateFin}-01` : null,
           }),
         });
         if (!res.ok) throw new Error("Webhook generation failed");
@@ -596,8 +596,8 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
               <Field label="% imputation">
                 <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
               </Field>
-              {isCDD && (
-                <Field label="Date de fin">
+              {!isGerant && (
+                <Field label="Date de fin (optionnel)">
                   <Input type="month" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
                 </Field>
               )}
