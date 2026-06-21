@@ -264,82 +264,68 @@ function SimulateurPage() {
   const chargesAudioTotal = chReelAudioEff + chProv * pAudio + sumSal * pAudio + simChargesAudio;
   const chargesVideoTotal = chReelVideoEff + chProv * pVideo + sumSal * pVideo + simChargesVideo;
 
-  // Enveloppes (mode normal uniquement)
-  const resT = caReelTotal - chargesTotal;
-  const resA = caReelAudio - chargesAudioTotal;
-  const resV = caReelVideo - chargesVideoTotal;
-  const sommeAV = resA + resV;
-  const partAudio = sommeAV > 0 ? Math.min(resA / sommeAV, 1) : 0.5;
-  const partVideo = sommeAV > 0 ? Math.min(resV / sommeAV, 1) : 0.5;
-  const maxAudio = plafondAudio > 0 ? plafondAudio : Infinity;
-  const maxVideo = plafondVideo > 0 ? plafondVideo : Infinity;
-  const enveloppeAudio =
-    resT > 0 ? Math.min(Math.max(resT * partAudio, plancherAudio), maxAudio) : plancherAudio;
-  const enveloppeVideo =
-    resT > 0 ? Math.min(Math.max(resT * partVideo, plancherVideo), maxVideo) : plancherVideo;
-
-  // % année écoulée
+  // % année écoulée (toujours utilisé dans le rendu pour CalcRow)
   const pctAnneeEcoulee = saisonAudio
     .slice(0, real.moisCourant)
     .reduce((s, v) => s + v / 100, 0);
 
-  // Capacité — calcul standard ou simplifié
-  const capacite = useMemo(() => {
-    if (anneBlanche) {
-      // Capacité par pôle simplifiée
-      const calc = (caObj: number, charges: number) =>
-        caObj - charges - caObj * reserveDecimal;
-      const audio = calc(caObjAudio, chargesAudioTotal);
-      const video = calc(caObjVideo, chargesVideoTotal);
-      const global = calc(caObjGlobal, chargesTotal);
-      return { audio, video, global, mode: "blanche" as const };
-    }
-    // Mode normal (pondéré) par pôle
-    const calcPole = (caR: number, caObj: number, ch: number) => {
-      const objYTD = caObj * pctAnneeEcoulee;
-      const surplus = caR - objYTD;
-      const caPond = surplus >= 0 ? objYTD + surplus * pctAnneeEcoulee : caR;
-      const resP = caPond - ch;
-      return resP > 0 ? resP * (1 - reserveDecimal) : resP;
-    };
-    return {
-      audio: calcPole(caReelAudio, caObjAudio, chargesAudioTotal),
-      video: calcPole(caReelVideo, caObjVideo, chargesVideoTotal),
-      global: calcPole(caReelTotal, caObjGlobal, chargesTotal),
-      mode: "normal" as const,
-    };
-  }, [
-    anneBlanche, caObjAudio, caObjVideo, caObjGlobal,
+  // ── KPIs simulés (état utilisateur courant) ──────────────────────────
+  const paramsSimule: KpisParams = {
+    caObjAudio, caObjVideo, pctAudio, reserve,
+    plancherAudio, plafondAudio, plancherVideo, plafondVideo,
+    tauxOption, tauxConfirme, saisonAudio, saisonVideo,
+    anneBlanche, caReelAudio, caReelVideo, caReelTotal,
     chargesAudioTotal, chargesVideoTotal, chargesTotal,
-    caReelAudio, caReelVideo, caReelTotal,
-    pctAnneeEcoulee, reserveDecimal,
-  ]);
+    moisCourant: real.moisCourant, scope,
+  };
+  const kpisSimule = calculerKpis(paramsSimule);
 
-  // Détail capacité scope sélectionné (mode normal)
-  const capDetail = useMemo(() => {
-    const caR = scope === "audio" ? caReelAudio : scope === "video" ? caReelVideo : caReelTotal;
-    const caObj = scope === "audio" ? caObjAudio : scope === "video" ? caObjVideo : caObjGlobal;
-    const ch = scope === "audio" ? chargesAudioTotal : scope === "video" ? chargesVideoTotal : chargesTotal;
-    const objYTD = caObj * pctAnneeEcoulee;
-    const surplus = caR - objYTD;
-    const surplusPond = surplus * pctAnneeEcoulee;
-    const caPond = surplus >= 0 ? objYTD + surplusPond : caR;
-    const resPond = caPond - ch;
-    const reserveMontant = resPond > 0 ? resPond * reserveDecimal : 0;
-    return { caR, caObj, ch, objYTD, surplus, surplusPond, caPond, resPond, reserveMontant };
-  }, [scope, caReelAudio, caReelVideo, caReelTotal, caObjAudio, caObjVideo, caObjGlobal,
-      chargesAudioTotal, chargesVideoTotal, chargesTotal, pctAnneeEcoulee, reserveDecimal]);
+  // ── KPIs baseline (données Airtable d'origine, avant édition) ────────
+  const paramsBaseline = useMemo<KpisParams>(() => {
+    const pAudioBase = real.pctAudio;
+    const pVideoBase = 1 - real.pctAudio;
+    const chProvBase = chargesProv
+      .filter((r) => num(r.fields.mois) <= real.moisCourant)
+      .reduce((s, r) => s + num(r.fields.montant_provisionne), 0);
+    const sumSalBase = salaires
+      .filter((r) => num(r.fields.mois) <= real.moisCourant)
+      .reduce((s, r) => s + num(r.fields.montant_impute), 0);
+    const chargesTotalBase = real.chReelTotal + chProvBase + sumSalBase;
+    const chargesAudioBase =
+      real.chargesAudio + real.chargesCommunes * pAudioBase + chProvBase * pAudioBase + sumSalBase * pAudioBase;
+    const chargesVideoBase =
+      real.chargesVideo + real.chargesCommunes * pVideoBase + chProvBase * pVideoBase + sumSalBase * pVideoBase;
+    return {
+      caObjAudio: real.caObjectifAudio,
+      caObjVideo: real.caObjectifVideo,
+      pctAudio: real.pctAudio * 100,
+      reserve: real.reserve * 100,
+      plancherAudio: real.plancherAudio,
+      plafondAudio: real.plafondAudio,
+      plancherVideo: real.plancherVideo,
+      plafondVideo: real.plafondVideo,
+      tauxOption: real.tauxOption * 100,
+      tauxConfirme: real.tauxConfirme * 100,
+      saisonAudio: real.saisonAudio.map((v) => v * 100),
+      saisonVideo: real.saisonVideo.map((v) => v * 100),
+      anneBlanche: false,
+      caReelAudio: real.caAudio,
+      caReelVideo: real.caVideo,
+      caReelTotal: real.caTotal,
+      chargesAudioTotal: chargesAudioBase,
+      chargesVideoTotal: chargesVideoBase,
+      chargesTotal: chargesTotalBase,
+      moisCourant: real.moisCourant,
+      scope,
+    };
+  }, [real, chargesProv, salaires, scope]);
+  const kpisBaseline = calculerKpis(paramsBaseline);
+  void kpisBaseline; // calculé pour comparaison future, pas encore affiché
 
-  // Projection
-  const projAudio = useMemo(() => {
-    const restant = saisonAudio.slice(real.moisCourant).reduce((s, v) => s + v / 100, 0);
-    return caReelAudio + caObjAudio * restant;
-  }, [saisonAudio, real.moisCourant, caReelAudio, caObjAudio]);
-  const projVideo = useMemo(() => {
-    const restant = saisonVideo.slice(real.moisCourant).reduce((s, v) => s + v / 100, 0);
-    return caReelVideo + caObjVideo * restant;
-  }, [saisonVideo, real.moisCourant, caReelVideo, caObjVideo]);
-  const projTotal = projAudio + projVideo;
+  // Destructurations — conservent les noms utilisés dans le rendu
+  const { capacite, capDetail, projAudio, projVideo, projTotal,
+          enveloppeAudio, enveloppeVideo, resT, resA, resV } = kpisSimule;
+  void resT; void resA; void resV;
 
   // Données graphique
   const chartData = useMemo(() => {
