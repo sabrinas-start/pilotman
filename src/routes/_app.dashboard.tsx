@@ -226,7 +226,7 @@ function DashboardPage() {
       <section
         className={cn(
           "grid grid-cols-1 gap-3",
-          !isPoleOnly ? "md:grid-cols-3" : "md:grid-cols-1",
+          !isPoleOnly ? "md:grid-cols-[1.3fr_1fr_1fr]" : "md:grid-cols-1",
         )}
       >
         {!isPoleOnly && (
@@ -496,7 +496,7 @@ function PoleCard({
   const solde = ca - chargesTotal;
   return (
     <div
-      className="rounded-r-lg border border-border bg-surface p-5"
+      className="rounded-r-lg border border-border bg-background p-5"
       style={{ borderLeft: `2px solid ${color}` }}
     >
       {loading ? (
@@ -506,7 +506,7 @@ function PoleCard({
           <p className="text-xs uppercase tracking-wide" style={{ color }}>
             {label}
           </p>
-          <p className={cn("mt-2 text-3xl font-semibold", signClass(enveloppe))}>
+          <p className={cn("mt-2 text-2xl font-semibold", signClass(enveloppe))}>
             {fmtEUR(enveloppe)}
           </p>
           <ul className="mt-4 space-y-1.5 text-sm">
