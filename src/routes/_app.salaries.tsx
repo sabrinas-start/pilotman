@@ -164,6 +164,17 @@ function SalariesPage() {
     });
     return MOIS_LABELS.map((label, i) => ({ mois: label.slice(0, 3), total: totaux[i] }));
   }, [coutsMoisQ.data]);
+  const coutsAnnuelsQ = useAirtable(SALARIES_MOIS_TABLE, {
+    filterByFormula: `{annee}=${ANNEE}`,
+  });
+  const montantAnnuelParSalarie = useMemo(() => {
+    const totaux: Record<string, number> = {};
+    (coutsAnnuelsQ.data ?? []).forEach((r) => {
+      const nom = str(r.fields.nom_salarie);
+      totaux[nom] = (totaux[nom] || 0) + num(r.fields.montant_impute);
+    });
+    return totaux;
+  }, [coutsAnnuelsQ.data]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editSalarie, setEditSalarie] = useState<Salarie | null>(null);
