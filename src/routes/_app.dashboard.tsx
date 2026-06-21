@@ -226,7 +226,7 @@ function DashboardPage() {
       <section
         className={cn(
           "grid grid-cols-1 gap-3",
-          !isPoleOnly ? "md:grid-cols-3" : "md:grid-cols-1",
+          !isPoleOnly ? "md:grid-cols-[1.3fr_1fr_1fr]" : "md:grid-cols-1",
         )}
       >
         {!isPoleOnly && (
