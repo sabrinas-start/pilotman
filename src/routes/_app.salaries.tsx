@@ -546,7 +546,7 @@ function AddSalarieModal({ onClose, onDone }: { onClose: () => void; onDone: () 
           body: JSON.stringify({
             salarie_record_id: recordId,
             date_effet: `${dateDem}-01`,
-            date_fin_charge: isCDD && dateFin ? `${dateFin}-01` : null,
+            date_fin_charge: !isGerant && dateFin ? `${dateFin}-01` : null,
           }),
         });
         if (!res.ok) throw new Error("Webhook generation failed");
