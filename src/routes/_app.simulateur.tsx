@@ -318,10 +318,70 @@ function SimulateurPage() {
       metriquesQ.refetch(),
       chargesReellesQ.refetch(),
       chargesProvQ.refetch(),
+      refCategoriesQ.refetch(),
       salairesQ.refetch(),
     ]);
     setHydrated(false);
+    setFixesHydrated(false);
   };
+
+  // ── Charges fixes par catégorie (source de chProv) ───────────────────
+  type FixeRow = {
+    id: string;
+    categorie: string;
+    type_charge: string;
+    pole: "audio" | "video" | "global";
+    montant: number;
+    taux: number; // en %
+  };
+  const chargesFixesBase = useMemo<FixeRow[]>(() => {
+    const refs = refCategoriesQ.data ?? [];
+    const sommeParCle = new Map<string, number>();
+    for (const r of chargesProv) {
+      const cat = str(r.fields.categorie);
+      const typ = str(r.fields.type_charge);
+      const cle = cat || typ;
+      if (!cle) continue;
+      sommeParCle.set(cle, (sommeParCle.get(cle) ?? 0) + num(r.fields.montant_provisionne));
+    }
+    return refs.map((r) => {
+      const categorie = str(r.fields.categorie);
+      const type_charge = str(r.fields.type_charge);
+      const tauxRaw = num(r.fields.taux_imputation_defaut);
+      const taux = tauxRaw <= 1 ? tauxRaw * 100 : tauxRaw;
+      const cle = categorie || type_charge;
+      const montant = sommeParCle.get(cle) ?? 0;
+      const pole: "audio" | "video" | "global" =
+        categorie.includes("Tournage Son") ? "audio"
+          : categorie.includes("Tournage Image") ? "video"
+          : "global";
+      return { id: r.id, categorie, type_charge, pole, montant, taux };
+    });
+  }, [refCategoriesQ.data, chargesProv]);
+
+  const chargesFixesGroupes = useMemo(() => {
+    const m = new Map<string, FixeRow[]>();
+    for (const r of chargesFixesBase) {
+      const arr = m.get(r.type_charge) ?? [];
+      arr.push(r);
+      m.set(r.type_charge, arr);
+    }
+    return Array.from(m.entries()).map(([type_charge, rows]) => ({ type_charge, rows }));
+  }, [chargesFixesBase]);
+
+  const resetChargesFixes = () => {
+    const init: Record<string, { montant: number; taux: number }> = {};
+    for (const r of chargesFixesBase) init[r.id] = { montant: r.montant, taux: r.taux };
+    setChargesFixesEdit(init);
+  };
+
+  useEffect(() => {
+    if (!fixesHydrated && refCategoriesQ.data && chargesProvQ.data && chargesFixesBase.length > 0) {
+      resetChargesFixes();
+      setFixesHydrated(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fixesHydrated, refCategoriesQ.data, chargesProvQ.data, chargesFixesBase]);
 
   // ── Computed ──────────────────────────────────────────────────────────
   const caObjGlobal = caObjAudio + caObjVideo;
