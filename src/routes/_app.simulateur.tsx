@@ -327,6 +327,7 @@ function SimulateurPage() {
     ]);
     setHydrated(false);
     setFixesHydrated(false);
+    setSalHydrated(false);
   };
 
   // ── Charges fixes par catégorie (source de chProv) ───────────────────
