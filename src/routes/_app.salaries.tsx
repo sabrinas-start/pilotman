@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export const Route = createFileRoute("/_app/salaries")({
   head: () => ({ meta: [{ title: "Salariés — Pôle Tournage" }] }),
@@ -152,6 +153,17 @@ type SortDir = "asc" | "desc";
 
 function SalariesPage() {
   const salariesQ = useAirtable(SALARIES_TABLE, {});
+  const coutsMoisQ = useAirtable(SALARIES_MOIS_TABLE, {
+    filterByFormula: `{annee}=${ANNEE}`,
+  });
+  const coutsParMois = useMemo(() => {
+    const totaux = Array(12).fill(0);
+    (coutsMoisQ.data ?? []).forEach((r) => {
+      const m = num(r.fields.mois);
+      if (m >= 1 && m <= 12) totaux[m - 1] += num(r.fields.montant_impute);
+    });
+    return MOIS_LABELS.map((label, i) => ({ mois: label.slice(0, 3), total: totaux[i] }));
+  }, [coutsMoisQ.data]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editSalarie, setEditSalarie] = useState<Salarie | null>(null);
@@ -219,6 +231,31 @@ function SalariesPage() {
         <Button onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4" /> Ajouter un salarié
         </Button>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-5">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+          Coûts mensuels — total masse salariale
+        </p>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={coutsParMois} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="#2e2e2e" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="mois" stroke="#888" tick={{ fontSize: 11, fill: "#888" }} />
+              <YAxis
+                stroke="#888"
+                tick={{ fontSize: 11, fill: "#888" }}
+                tickFormatter={(v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
+              />
+              <Tooltip
+                contentStyle={{ background: "#1f1f1f", border: "0.5px solid #2e2e2e", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "#F0F0F0" }}
+                formatter={(value: number) => [fmtEUR(value), "Total"]}
+              />
+              <Bar dataKey="total" fill="#E8C547" radius={[2, 2, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
