@@ -456,7 +456,26 @@ function DashboardPage() {
 
       {/* BLOC 3 — Projection */}
       {!isPoleOnly && (
-        <section>
+        <section className="space-y-2">
+          <div className="flex justify-end">
+            <div className="flex gap-1">
+              {(["Global", "Audio", "Vidéo"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setProjectionScope(s)}
+                  className={cn(
+                    "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                    projectionScope === s
+                      ? "border-border bg-muted text-foreground"
+                      : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
           <BaseCard loading={loading} label={projectionTitle}>
             <p className="text-3xl font-semibold text-foreground">{fmtEUR(projectionVar.caProjecte)}</p>
             <p className="mt-1 text-xs text-muted-foreground">
