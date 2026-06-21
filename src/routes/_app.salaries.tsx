@@ -288,6 +288,8 @@ function SalariesPage() {
               <SortableTh k="date_fin">Date fin</SortableTh>
               <SortableTh k="cte_annuel" align="right">CTE annuel</SortableTh>
               <SortableTh k="taux_imputation" align="right">% imputation</SortableTh>
+              <SortableTh k="cte_annuel" align="right">Montant annuel imputé</SortableTh>
+              <SortableTh k="cte_annuel" align="right">CTE imputé annuel</SortableTh>
               <th className="px-4 py-3 w-10" />
             </tr>
           </thead>
