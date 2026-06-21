@@ -496,7 +496,7 @@ function PoleCard({
   const solde = ca - chargesTotal;
   return (
     <div
-      className="rounded-r-lg border border-border bg-surface p-5"
+      className="rounded-r-lg border border-border bg-background p-5"
       style={{ borderLeft: `2px solid ${color}` }}
     >
       {loading ? (
