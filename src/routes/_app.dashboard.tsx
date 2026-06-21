@@ -41,6 +41,7 @@ function DashboardPage() {
   const isPoleOnly = profil === "audio" || profil === "video";
   const moisCourant = new Date().getMonth() + 1;
   const [graphScope, setGraphScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
+  const [cardsScope, setCardsScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
 
   const metriquesQ = useAirtable("tblNznOYtuFDUI3df", {
     maxRecords: 1,
