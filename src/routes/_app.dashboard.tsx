@@ -514,8 +514,8 @@ function DashboardPage() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <ul className="mt-3 space-y-1.5 text-sm">
-                  <DetailRow label="CA réel YTD" value={fmtEUR(capaciteVar.caTotal)} />
-                  <DetailRow label="+ Objectifs mois restants" value={fmtEUR(projectionVar.caObjectif - capaciteVar.caObjectifYTD)} />
+                  <DetailRow label="CA réel YTD" value={fmtEUR(projectionVar.caTotal)} />
+                  <DetailRow label="+ Objectifs mois restants" value={fmtEUR(projectionVar.caObjectif - projectionVar.caObjectifYTD)} />
                 </ul>
               </CollapsibleContent>
             </Collapsible>
