@@ -839,6 +839,7 @@ function SimulateurPage() {
           )}
         </div>
 
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Charges fixes par catégorie */}
         <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
           <div className="flex items-center justify-between gap-3">
@@ -1062,7 +1063,9 @@ function SimulateurPage() {
             </div>
           )}
         </div>
+        </div>
 
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Charges simulées */}
         <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
           <div className="flex items-center justify-between gap-3">
@@ -1206,6 +1209,7 @@ function SimulateurPage() {
             </div>
           )}
         </div>
+        </div>
 
         {/* ─── Résultats ─── */}
         {anneBlanche ? (
@@ -1219,7 +1223,7 @@ function SimulateurPage() {
             </MetricCard>
           </section>
         ) : (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_3fr]">
             <ComparisonCard
               title="Projection fin d'année"
               reel={kpisBaseline.projTotal}
