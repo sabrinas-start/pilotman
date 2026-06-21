@@ -413,13 +413,21 @@ function BaseCard({
   loading,
   label,
   children,
+  accentColor,
 }: {
   loading: boolean;
   label: string;
   children: React.ReactNode;
+  accentColor?: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-5">
+    <div
+      className={cn(
+        "rounded-lg border border-border bg-surface p-5",
+        accentColor && "rounded-l-none",
+      )}
+      style={accentColor ? { borderLeft: `2px solid ${accentColor}` } : undefined}
+    >
       {loading ? (
         <Skeleton className="h-32 w-full" />
       ) : (
