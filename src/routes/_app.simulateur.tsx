@@ -581,18 +581,31 @@ function SimulateurPage() {
   // Données graphique
   const chartData = useMemo(() => {
     const moisIdx = real.moisCourant - 1; // 0-based dernier mois réel
+    void moisIdx;
     const sa = scope === "audio" ? saisonAudio : scope === "video" ? saisonVideo : saisonAudio;
     const caObjScope = scope === "audio" ? caObjAudio : scope === "video" ? caObjVideo : caObjGlobal;
-    const caReelScope = scope === "audio" ? caReelAudio : scope === "video" ? caReelVideo : caReelTotal;
-    const chargesScope = scope === "audio" ? chargesAudioTotal : scope === "video" ? chargesVideoTotal : chargesTotal;
+    // Baseline (réel) — utilisé pour les courbes "Revenus/Charges/Solde" existantes
+    const caReelScopeBase =
+      scope === "audio" ? paramsBaseline.caReelAudio
+      : scope === "video" ? paramsBaseline.caReelVideo
+      : paramsBaseline.caReelTotal;
+    const chargesScopeBase =
+      scope === "audio" ? paramsBaseline.chargesAudioTotal
+      : scope === "video" ? paramsBaseline.chargesVideoTotal
+      : paramsBaseline.chargesTotal;
+    // Simulé — utilisé uniquement pour la courbe "Charges (simulé)"
+    const chargesScopeSim =
+      scope === "audio" ? chargesAudioTotal
+      : scope === "video" ? chargesVideoTotal
+      : chargesTotal;
 
-    // Répartition charges YTD prorata sur mois écoulés (uniforme)
     const moisEcoules = anneBlanche ? 0 : real.moisCourant;
     const moisRestants = 12 - moisEcoules;
+    void moisRestants;
 
     let cumulRev = 0;
     let cumulCh = 0;
-    // Revenus mensuels réels = caReel * (saison_i / sum_i<=current)
+    let cumulChSim = 0;
     const sumSaisonEcoulee = sa.slice(0, moisEcoules).reduce((s, v) => s + v / 100, 0) || 1;
 
     return MOIS.map((label, i) => {
@@ -600,24 +613,26 @@ function SimulateurPage() {
       const isReel = mois1 <= moisEcoules;
       const isProj = mois1 > moisEcoules;
 
-      // Revenu du mois
       let revMois = 0;
       let chMois = 0;
+      let chMoisSim = 0;
       if (isReel) {
-        revMois = caReelScope * (sa[i] / 100) / sumSaisonEcoulee;
-        chMois = chargesScope / Math.max(moisEcoules, 1);
+        revMois = caReelScopeBase * (sa[i] / 100) / sumSaisonEcoulee;
+        chMois = chargesScopeBase / Math.max(moisEcoules, 1);
+        chMoisSim = chargesScopeSim / Math.max(moisEcoules, 1);
       } else {
-        // projeté : objectif * saison
         revMois = caObjScope * (sa[i] / 100);
-        // charges projetées : on étend la moyenne actuelle ou rien si année blanche
         if (anneBlanche) {
-          chMois = chargesScope / 12;
+          chMois = chargesScopeBase / 12;
+          chMoisSim = chargesScopeSim / 12;
         } else {
-          chMois = (chargesScope / Math.max(moisEcoules, 1));
+          chMois = chargesScopeBase / Math.max(moisEcoules, 1);
+          chMoisSim = chargesScopeSim / Math.max(moisEcoules, 1);
         }
       }
       cumulRev += revMois;
       cumulCh += chMois;
+      cumulChSim += chMoisSim;
 
       return {
         mois: label,
@@ -627,12 +642,11 @@ function SimulateurPage() {
         revenusProj: isProj || mois1 === moisEcoules ? cumulRev : null,
         chargesProj: isProj || mois1 === moisEcoules ? cumulCh : null,
         soldeProj: isProj || mois1 === moisEcoules ? cumulRev - cumulCh : null,
+        chargesSim: cumulChSim,
       };
     });
-    // moisRestants used implicitly above
-    void moisRestants;
   }, [scope, saisonAudio, saisonVideo, caObjAudio, caObjVideo, caObjGlobal,
-      caReelAudio, caReelVideo, caReelTotal, chargesAudioTotal, chargesVideoTotal,
+      paramsBaseline, chargesAudioTotal, chargesVideoTotal,
       chargesTotal, real.moisCourant, anneBlanche]);
 
   if (loading && !hydrated) {
