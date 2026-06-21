@@ -175,6 +175,9 @@ function SimulateurPage() {
   const chargesProvQ = useAirtable("tbljefhnPsyTAgUA4", {
     filterByFormula: `AND({annee}=${ANNEE},{neutralisee}=FALSE(),{source}!='saisie')`,
   });
+  const refCategoriesQ = useAirtable("tblf74zD8dSSlzDtN", {
+    filterByFormula: `{est_fixe}=TRUE()`,
+  });
   const salairesQ = useAirtable("tbl0bVuIyeIOXbjGH", {
     filterByFormula: `{annee}=${ANNEE}`,
   });
