@@ -516,27 +516,37 @@ function PoleCard({
                 {fmtEUR(ca)}
               </span>
             </li>
-            <DetailRow label="Charges totales" value={fmtEUR(chargesTotal)} />
-            <SubDetail label="dont réelles" value={fmtEUR(chargesReelles)} />
-            <SubDetail label="dont provisions" value={fmtEUR(provisions)} />
-            <SubDetail label="dont salaires" value={fmtEUR(salaires)} />
             <DetailRow
               label="Solde réel"
               value={fmtEUR(solde)}
               valueClass={signClass(solde)}
             />
           </ul>
-          <hr className="my-3 border-border" />
-          <ul className="space-y-1.5 text-sm">
-            <li className="flex items-center justify-between">
-              <span className="text-muted-foreground">Pipe retenu</span>
-              <span className="font-medium tabular-nums" style={{ color }}>
-                {fmtEUR(pipeRetenu)}
-              </span>
-            </li>
-            <SubDetail label="Optimiste" value={fmtEUR(pipeOpt)} />
-            <SubDetail label="Pondéré" value={fmtEUR(pipePon)} />
-          </ul>
+          <Collapsible>
+            <CollapsibleTrigger className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground [&[data-state=open]>svg]:rotate-180">
+              <ChevronDown className="h-3.5 w-3.5 transition-transform" />
+              Voir le détail
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                <DetailRow label="Charges totales" value={fmtEUR(chargesTotal)} />
+                <SubDetail label="dont réelles" value={fmtEUR(chargesReelles)} />
+                <SubDetail label="dont provisions" value={fmtEUR(provisions)} />
+                <SubDetail label="dont salaires" value={fmtEUR(salaires)} />
+              </ul>
+              <hr className="my-3 border-border" />
+              <ul className="space-y-1.5 text-sm">
+                <li className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Pipe retenu</span>
+                  <span className="font-medium tabular-nums" style={{ color }}>
+                    {fmtEUR(pipeRetenu)}
+                  </span>
+                </li>
+                <SubDetail label="Optimiste" value={fmtEUR(pipeOpt)} />
+                <SubDetail label="Pondéré" value={fmtEUR(pipePon)} />
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
         </>
       )}
     </div>
