@@ -418,14 +418,14 @@ function ExpandedContent({
           <tbody>
             {moisQ.loading && (
               <tr>
-                <td colSpan={6} className="p-3">
+                <td colSpan={7} className="p-3">
                   <Skeleton className="h-6 w-full" />
                 </td>
               </tr>
             )}
             {!moisQ.loading && lignes.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
+                <td colSpan={7} className="px-3 py-4 text-center text-muted-foreground">
                   Aucune ligne mensuelle.
                 </td>
               </tr>
