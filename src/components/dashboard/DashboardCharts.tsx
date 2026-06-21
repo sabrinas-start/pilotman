@@ -152,7 +152,7 @@ export function DashboardCharts({
         soldeProj: i >= moisCourantIdx ? cumulRevProj - cumulChargesProj : null,
       };
     });
-  }, [revenus, chargesReelles, scope, pctAudio, pctVideo, moisCourantIdx]);
+  }, [revenus, chargesReelles, scope, pctAudio, pctVideo, moisCourantIdx, objectifs]);
 
   const tooltipContentStyle = {
     background: "#1f1f1f",
