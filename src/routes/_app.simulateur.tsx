@@ -454,18 +454,30 @@ function SimulateurPage() {
   // ── Salaires par salarié (source de sumSal) ──────────────────────────
   type SalarieRow = { id: string; nom: string; montant: number; taux: number };
   const salairesBase = useMemo<SalarieRow[]>(() => {
-    const m = new Map<string, number>();
+    const agg = new Map<string, { somme: number; tauxDec: number }>();
     for (const r of salaires) {
       const nom = str(r.fields.nom_salarie);
       if (!nom) continue;
-      m.set(nom, (m.get(nom) ?? 0) + num(r.fields.montant_impute));
+      const existing = agg.get(nom);
+      if (existing) {
+        existing.somme += num(r.fields.montant_impute);
+      } else {
+        agg.set(nom, {
+          somme: num(r.fields.montant_impute),
+          tauxDec: num(r.fields.taux_imputation),
+        });
+      }
     }
-    return Array.from(m.entries()).map(([nom, somme]) => ({
-      id: nom,
-      nom,
-      montant: Math.round(somme * 100) / 100,
-      taux: 100,
-    }));
+    return Array.from(agg.entries()).map(([nom, { somme, tauxDec }]) => {
+      const tauxPct = tauxDec * 100;
+      const montantAnnuel = tauxDec > 0 ? Math.round((somme / tauxDec) * 100) / 100 : 0;
+      return {
+        id: nom,
+        nom,
+        montant: montantAnnuel,
+        taux: tauxDec > 0 ? Math.round(tauxPct * 100) / 100 : 0,
+      };
+    });
   }, [salaires]);
 
   const resetSalaires = () => {
