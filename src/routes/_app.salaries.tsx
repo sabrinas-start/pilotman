@@ -65,6 +65,7 @@ type SalarieMois = {
   fonpeps_mensuel: number;
   taux_imputation: number;
   montant_impute: number;
+  montant_prime: number;
 };
 
 const fmtEUR = (n: number) =>
@@ -386,6 +387,7 @@ function ExpandedContent({
         fonpeps_mensuel: num(f.fonpeps_mensuel),
         taux_imputation: num(f.taux_imputation),
         montant_impute: num(f.montant_impute),
+        montant_prime: num(f.montant_prime),
       };
     });
   }, [moisQ.data]);
@@ -408,6 +410,7 @@ function ExpandedContent({
               <th className="px-3 py-2 text-right">CTE mensuel</th>
               <th className="px-3 py-2 text-right">FONPEPS</th>
               <th className="px-3 py-2 text-right">% imputation</th>
+              <th className="px-3 py-2 text-right">Prime</th>
               <th className="px-3 py-2 text-right">Montant imputé</th>
               <th className="px-3 py-2 w-16" />
             </tr>
@@ -415,14 +418,14 @@ function ExpandedContent({
           <tbody>
             {moisQ.loading && (
               <tr>
-                <td colSpan={6} className="p-3">
+                <td colSpan={7} className="p-3">
                   <Skeleton className="h-6 w-full" />
                 </td>
               </tr>
             )}
             {!moisQ.loading && lignes.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
+                <td colSpan={7} className="px-3 py-4 text-center text-muted-foreground">
                   Aucune ligne mensuelle.
                 </td>
               </tr>
@@ -433,6 +436,7 @@ function ExpandedContent({
                 <td className="px-3 py-2 text-right tabular-nums">{fmtEUR(l.cte_mensuel)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{fmtEUR(l.fonpeps_mensuel)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{fmtPct(l.taux_imputation)}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{fmtEUR(l.montant_prime)}</td>
                 <td className="px-3 py-2 text-right tabular-nums font-medium">{fmtEUR(l.montant_impute)}</td>
                 <td className="px-3 py-2 text-right">
                   <Button variant="ghost" size="sm" onClick={() => setEditLine(l)}>
@@ -947,13 +951,15 @@ function EditMoisModal({
 }) {
   const [cte, setCte] = useState(String(ligne.cte_mensuel));
   const [taux, setTaux] = useState((ligne.taux_imputation * 100).toFixed(1));
+  const [prime, setPrime] = useState(String(ligne.montant_prime));
   const [loading, setLoading] = useState(false);
 
   const cteNum = parseFloat(cte) || 0;
   const txNum = parseFloat(taux) || 0; // entré en %
   const txDec = txNum / 100;
   const fonpeps = ligne.fonpeps_mensuel;
-  const montantImpute = (cteNum - fonpeps) * txDec;
+  const primeNum = parseFloat(prime) || 0;
+  const montantImpute = (cteNum - fonpeps + primeNum) * txDec;
 
   const submit = async () => {
     setLoading(true);
@@ -962,6 +968,7 @@ function EditMoisModal({
         cte_mensuel: cteNum,
         taux_imputation: txDec,
         montant_impute: montantImpute,
+        montant_prime: primeNum,
       });
       // Recalcul du cte_annuel à partir de toutes les lignes mensuelles
       await recomputeCteAnnuel(salarieId, salarieNom);
@@ -991,6 +998,9 @@ function EditMoisModal({
           )}
           <Field label="% imputation">
             <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
+          </Field>
+          <Field label="Prime (€)">
+            <Input type="number" value={prime} onChange={(e) => setPrime(e.target.value)} onWheel={blurOnWheel} />
           </Field>
           <div className="rounded border border-border bg-muted/20 px-3 py-2 text-sm">
             <span className="text-muted-foreground">Montant imputé :</span>{" "}
