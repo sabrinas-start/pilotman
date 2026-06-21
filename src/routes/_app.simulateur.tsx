@@ -797,6 +797,59 @@ function SimulateurPage() {
             Ajouter une charge
           </button>
         </Section>
+
+        {/* Revenus simulés */}
+        <Section title="Revenus simulés">
+          {simRevenus.map((c) => (
+            <div key={c.id} className="rounded-md border border-border p-2 space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Input
+                  value={c.label}
+                  onChange={(e) => updateRevenu(c.id, { label: e.target.value })}
+                  placeholder="Libellé"
+                  className="h-7 flex-1 text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeRevenu(c.id)}
+                  className="text-muted-foreground hover:text-destructive"
+                  title="Supprimer"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={c.montant}
+                    onChange={(e) => updateRevenu(c.id, { montant: parseFloat(e.target.value) || 0 })}
+                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    className="h-7 pr-5 text-xs"
+                  />
+                  <span className="pointer-events-none absolute inset-y-0 right-1.5 flex items-center text-[10px] text-muted-foreground">€</span>
+                </div>
+                <select
+                  value={c.pole}
+                  onChange={(e) => updateRevenu(c.id, { pole: e.target.value as ChargePole })}
+                  className="flex h-7 w-full rounded-md border border-input bg-transparent px-2 text-xs"
+                >
+                  <option value="global">Global</option>
+                  <option value="audio">Audio</option>
+                  <option value="video">Vidéo</option>
+                </select>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addRevenu}
+            className="flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:border-foreground/40"
+          >
+            <Plus className="h-3 w-3" />
+            Ajouter un revenu
+          </button>
+        </Section>
       </aside>
 
       {/* ─────────── Zone droite ─────────── */}
