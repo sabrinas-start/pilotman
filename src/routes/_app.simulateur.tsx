@@ -287,6 +287,8 @@ function SimulateurPage() {
   const [seasonOpen, setSeasonOpen] = useState(false);
   const [chargesFixesOpen, setChargesFixesOpen] = useState(false);
   const [salairesOpen, setSalairesOpen] = useState(false);
+  const [chargesSimOpen, setChargesSimOpen] = useState(false);
+  const [revenusSimOpen, setRevenusSimOpen] = useState(false);
   const [scope, setScope] = useState<Scope>("global");
   const [hydrated, setHydrated] = useState(false);
   const [fixesHydrated, setFixesHydrated] = useState(false);
