@@ -374,6 +374,7 @@ function ExpandableRow({
   salarie,
   badge,
   isOpen,
+  montantAnnuelParSalarie,
   onToggle,
   onEdit,
   onDelete,
@@ -382,6 +383,7 @@ function ExpandableRow({
   salarie: Salarie;
   badge: { bg: string; color: string; label: string };
   isOpen: boolean;
+  montantAnnuelParSalarie: Record<string, number>;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -406,13 +408,19 @@ function ExpandableRow({
         <td className="px-4 py-3 text-muted-foreground">{salarie.date_fin ? fmtMonthYear(salarie.date_fin) : "—"}</td>
         <td className="px-4 py-3 text-right tabular-nums">{fmtEUR(salarie.cte_annuel)}</td>
         <td className="px-4 py-3 text-right tabular-nums">{fmtPct(salarie.taux_imputation)}</td>
+        <td className="px-4 py-3 text-right tabular-nums">
+          {fmtEUR(montantAnnuelParSalarie[salarie.nom] || 0)}
+        </td>
+        <td className="px-4 py-3 text-right tabular-nums">
+          {fmtEUR(salarie.cte_annuel * salarie.taux_imputation)}
+        </td>
         <td className="px-4 py-3 text-muted-foreground">
           {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </td>
       </tr>
       {isOpen && (
         <tr className="border-t border-border bg-muted/10">
-          <td colSpan={7} className="px-4 py-4">
+          <td colSpan={9} className="px-4 py-4">
             <ExpandedContent
               salarie={salarie}
               onEdit={onEdit}
