@@ -423,8 +423,8 @@ function BaseCard({
   return (
     <div
       className={cn(
-        "rounded-lg p-5",
-        highlight ? "border-2 border-accent bg-accent/10" : "border border-border bg-surface",
+        "rounded-lg border p-5",
+        highlight ? "border-accent bg-surface" : "border-border bg-surface",
       )}
     >
       {loading ? (
