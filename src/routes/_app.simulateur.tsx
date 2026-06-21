@@ -446,7 +446,7 @@ function SimulateurPage() {
   const caReelAudio = (anneBlanche ? 0 : real.caAudio) + _simRevenusAudio;
   const caReelVideo = (anneBlanche ? 0 : real.caVideo) + _simRevenusVideo;
   const caReelTotal = (anneBlanche ? 0 : real.caTotal) + _simRevenusAudio + _simRevenusVideo;
-  const caReelPole = anneBlanche ? 0 : real.caPole;
+  
 
   // Charges réelles
   const chReelTotalEff = anneBlanche ? 0 : real.chReelTotal;
