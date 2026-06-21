@@ -415,10 +415,22 @@ function SimulateurPage() {
   const totalSaisonAudio = saisonAudio.reduce((s, v) => s + v, 0);
   const totalSaisonVideo = saisonVideo.reduce((s, v) => s + v, 0);
 
-  // CA réel (dépend de anneBlanche)
-  const caReelAudio = anneBlanche ? 0 : real.caAudio;
-  const caReelVideo = anneBlanche ? 0 : real.caVideo;
-  const caReelTotal = anneBlanche ? 0 : real.caTotal;
+  // Revenus simulés (ajoutés au CA réel) — calculés ici pour pouvoir abonder caReel*
+  const _simRevenusAudio = simRevenus.reduce(
+    (s, c) =>
+      s + (c.pole === "audio" ? c.montant : c.pole === "global" ? c.montant * pAudio : 0),
+    0,
+  );
+  const _simRevenusVideo = simRevenus.reduce(
+    (s, c) =>
+      s + (c.pole === "video" ? c.montant : c.pole === "global" ? c.montant * pVideo : 0),
+    0,
+  );
+
+  // CA réel (dépend de anneBlanche) — abondé des revenus simulés
+  const caReelAudio = (anneBlanche ? 0 : real.caAudio) + _simRevenusAudio;
+  const caReelVideo = (anneBlanche ? 0 : real.caVideo) + _simRevenusVideo;
+  const caReelTotal = (anneBlanche ? 0 : real.caTotal) + _simRevenusAudio + _simRevenusVideo;
   const caReelPole = anneBlanche ? 0 : real.caPole;
 
   // Charges réelles
