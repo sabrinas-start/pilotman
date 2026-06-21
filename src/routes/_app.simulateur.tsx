@@ -259,6 +259,8 @@ function SimulateurPage() {
         num(objectifs[`saisonnalite_video_${String(i + 1).padStart(2, "0")}`]),
       ),
       dateSnapshot: str(metriques.date_snapshot) || "—",
+      pipeRetenuTotal:
+        num(metriques.ca_pipe_optimiste_total) + num(metriques.ca_pipe_pondere_total),
     };
   }, [metriques, objectifs, chargesReelles, chargesProv]);
 
@@ -584,6 +586,47 @@ function SimulateurPage() {
     };
   }, [real, chargesProv, salaires, scope]);
   const kpisBaseline = calculerKpis(paramsBaseline);
+
+  // ── Décompositions affichage (baseline) ─────────────────────────────
+  const baselineBreakdown = useMemo(() => {
+    const pAudioBase = real.pctAudio;
+    const pVideoBase = 1 - real.pctAudio;
+    const chProvBase = chargesProv
+      .filter((r) => num(r.fields.mois) <= real.moisCourant)
+      .reduce((s, r) => s + num(r.fields.montant_provisionne), 0);
+    const sumSalBase = salaires
+      .filter((r) => num(r.fields.mois) <= real.moisCourant)
+      .reduce((s, r) => s + num(r.fields.montant_impute), 0);
+    const chargesProvAnneeBase = chargesProv.reduce(
+      (s, r) => s + num(r.fields.montant_provisionne),
+      0,
+    );
+    const salairesAnneeBase = salaires.reduce(
+      (s, r) => s + num(r.fields.montant_impute),
+      0,
+    );
+    return {
+      pAudioBase,
+      pVideoBase,
+      chargesReellesAudioBase: real.chargesAudio + real.chargesCommunes * pAudioBase,
+      chargesReellesVideoBase: real.chargesVideo + real.chargesCommunes * pVideoBase,
+      chargesProvAudioBase: chProvBase * pAudioBase,
+      chargesProvVideoBase: chProvBase * pVideoBase,
+      chargesSalAudioBase: sumSalBase * pAudioBase,
+      chargesSalVideoBase: sumSalBase * pVideoBase,
+      chargesProvAnneeBase,
+      salairesAnneeBase,
+      caObjectifGlobalBase: real.caObjectifAudio + real.caObjectifVideo,
+    };
+  }, [real, chargesProv, salaires]);
+
+  // Projection charges (annualisée) pour solde projeté
+  const chargesProjeteesBase =
+    real.chReelTotal + baselineBreakdown.chargesProvAnneeBase + baselineBreakdown.salairesAnneeBase;
+  const chargesProjeteesSimule =
+    real.chReelTotal + chProvAnnuel + sumSalAnnuel + simChargesTotal;
+  const soldeProjeteBase = kpisBaseline.projTotal - chargesProjeteesBase;
+  const soldeProjeteSimule = kpisSimule.projTotal - chargesProjeteesSimule;
 
   // Destructurations — conservent les noms utilisés dans le rendu
   const { capacite, capDetail, projAudio, projVideo, projTotal,
@@ -1165,17 +1208,79 @@ function SimulateurPage() {
               title="Projection fin d'année"
               reel={kpisBaseline.projTotal}
               simule={kpisSimule.projTotal}
-            />
+              footer={
+                <div className="mt-3 border-t border-border pt-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs" style={{ color: C_ACCENT }}>Pipe attendu</span>
+                    <span className="text-sm font-semibold tabular-nums" style={{ color: C_ACCENT }}>
+                      {fmtEUR(real.pipeRetenuTotal)}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">donnée réelle, non simulable</p>
+                </div>
+              }
+            >
+              <div className="mt-3 border-t border-border pt-2">
+                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <span></span>
+                  <span className="w-24 text-right">Réel</span>
+                  <span className="w-24 text-right" style={{ color: C_ACCENT }}>Simulé</span>
+                </div>
+                <CompareRow
+                  label="Objectif annuel"
+                  reel={baselineBreakdown.caObjectifGlobalBase}
+                  simule={caObjGlobal}
+                />
+                <CompareRow
+                  label="Charges projetées"
+                  reel={chargesProjeteesBase}
+                  simule={chargesProjeteesSimule}
+                />
+                <CompareRow
+                  label="Solde projeté annuel"
+                  reel={soldeProjeteBase}
+                  simule={soldeProjeteSimule}
+                  semantic
+                />
+              </div>
+            </ComparisonCard>
             <ComparisonCard
               title="💡 Capacité d'investissement"
               reel={kpisBaseline.capacite[scope]}
               simule={kpisSimule.capacite[scope]}
               right={<ScopeToggle scope={scope} setScope={setScope} />}
-            />
+            >
+              <div className="mt-4 border-t border-border pt-3">
+                <p className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Détail du calcul
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <CapDetailCol
+                    title="Réel"
+                    titleColor="var(--color-muted-foreground)"
+                    detail={kpisBaseline.capDetail}
+                    capacite={kpisBaseline.capacite[scope]}
+                    reservePct={real.reserve * 100}
+                    pctAnneeEcoulee={
+                      real.saisonAudio.slice(0, real.moisCourant).reduce((s, v) => s + v, 0)
+                    }
+                  />
+                  <CapDetailCol
+                    title="Simulé"
+                    titleColor={C_ACCENT}
+                    detail={kpisSimule.capDetail}
+                    capacite={kpisSimule.capacite[scope]}
+                    reservePct={reserve}
+                    pctAnneeEcoulee={pctAnneeEcoulee * 100}
+                  />
+                </div>
+              </div>
+            </ComparisonCard>
           </section>
         )}
 
-        {/* Détail Capacité (déroulant) */}
+        {/* Détail Capacité — uniquement en mode année blanche (sinon intégré dans la card) */}
+        {anneBlanche && (
         <section>
           <div className="rounded-lg border border-border bg-surface p-5">
             <div className="mb-3 flex items-center justify-between">
@@ -1185,42 +1290,19 @@ function SimulateurPage() {
               <SimuleBadge />
             </div>
             <div className="space-y-0">
-              {anneBlanche ? (
-                <>
-                  <CalcRow op="" label="CA objectif" value={fmtEUR(capDetail.caObj)} />
-                  <CalcRow op="−" label="Charges totales" value={`− ${fmtEUR(capDetail.ch)}`} />
-                  <CalcRow op="−" label={`Réserve sécurité (${reserve.toFixed(0)}%)`}
-                    value={`− ${fmtEUR(capDetail.caObj * reserveDecimal)}`} />
-                  <div className="mt-3 border-t border-border" />
-                  <div className="mt-3">
-                    <CalcRow op="=" label="Capacité d'investissement"
-                      value={fmtEUR(capacite[scope])} semantic={capacite[scope]} bold />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <CalcRow op="" label="CA réel YTD" value={fmtEUR(capDetail.caR)} />
-                  <CalcRow op="−" label="CA objectif YTD" value={`− ${fmtEUR(capDetail.objYTD)}`} />
-                  <CalcRow op="=" label="Surplus" value={fmtEUR(capDetail.surplus)} />
-                  <CalcRow op="×" label={`% année écoulée (${(pctAnneeEcoulee * 100).toFixed(0)}%)`}
-                    value={`× ${(pctAnneeEcoulee * 100).toFixed(0)}%`} />
-                  <CalcRow op="=" label="Surplus pondéré" value={fmtEUR(capDetail.surplusPond)} />
-                  <CalcRow op="+" label="CA objectif YTD" value={`+ ${fmtEUR(capDetail.objYTD)}`} />
-                  <CalcRow op="=" label="CA pondéré" value={fmtEUR(capDetail.caPond)} />
-                  <CalcRow op="−" label="Charges totales" value={`− ${fmtEUR(capDetail.ch)}`} />
-                  <CalcRow op="=" label="Résultat pondéré" value={fmtEUR(capDetail.resPond)} semantic={capDetail.resPond} />
-                  <CalcRow op="−" label={`Réserve sécurité (${reserve.toFixed(0)}%)`}
-                    value={capDetail.reserveMontant > 0 ? `− ${fmtEUR(capDetail.reserveMontant)}` : fmtEUR(0)} />
-                  <div className="mt-3 border-t border-border" />
-                  <div className="mt-3">
-                    <CalcRow op="=" label="Capacité d'investissement"
-                      value={fmtEUR(capacite[scope])} semantic={capacite[scope]} bold />
-                  </div>
-                </>
-              )}
+              <CalcRow op="" label="CA objectif" value={fmtEUR(capDetail.caObj)} />
+              <CalcRow op="−" label="Charges totales" value={`− ${fmtEUR(capDetail.ch)}`} />
+              <CalcRow op="−" label={`Réserve sécurité (${reserve.toFixed(0)}%)`}
+                value={`− ${fmtEUR(capDetail.caObj * reserveDecimal)}`} />
+              <div className="mt-3 border-t border-border" />
+              <div className="mt-3">
+                <CalcRow op="=" label="Capacité d'investissement"
+                  value={fmtEUR(capacite[scope])} semantic={capacite[scope]} bold />
+              </div>
             </div>
           </div>
         </section>
+        )}
 
         {/* Graphique projection */}
         <section>
@@ -1269,13 +1351,59 @@ function SimulateurPage() {
               reel={kpisBaseline.enveloppeAudio}
               simule={kpisSimule.enveloppeAudio}
               pole="audio"
-            />
+            >
+              <div className="mt-3 border-t border-border pt-2">
+                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <span></span>
+                  <span className="w-24 text-right">Réel</span>
+                  <span className="w-24 text-right" style={{ color: C_ACCENT }}>Simulé</span>
+                </div>
+                <CompareRow
+                  label="dont charges réelles"
+                  reel={baselineBreakdown.chargesReellesAudioBase}
+                  simule={chReelAudioEff}
+                />
+                <CompareRow
+                  label="dont provisions"
+                  reel={baselineBreakdown.chargesProvAudioBase}
+                  simule={chProv * pAudio}
+                />
+                <CompareRow
+                  label="dont salaires"
+                  reel={baselineBreakdown.chargesSalAudioBase}
+                  simule={sumSal * pAudio}
+                />
+              </div>
+            </ComparisonCard>
             <ComparisonCard
               title="🎬 Enveloppe Vidéo"
               reel={kpisBaseline.enveloppeVideo}
               simule={kpisSimule.enveloppeVideo}
               pole="video"
-            />
+            >
+              <div className="mt-3 border-t border-border pt-2">
+                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <span></span>
+                  <span className="w-24 text-right">Réel</span>
+                  <span className="w-24 text-right" style={{ color: C_ACCENT }}>Simulé</span>
+                </div>
+                <CompareRow
+                  label="dont charges réelles"
+                  reel={baselineBreakdown.chargesReellesVideoBase}
+                  simule={chReelVideoEff}
+                />
+                <CompareRow
+                  label="dont provisions"
+                  reel={baselineBreakdown.chargesProvVideoBase}
+                  simule={chProv * pVideo}
+                />
+                <CompareRow
+                  label="dont salaires"
+                  reel={baselineBreakdown.chargesSalVideoBase}
+                  simule={sumSal * pVideo}
+                />
+              </div>
+            </ComparisonCard>
           </section>
         )}
       </div>
@@ -1491,8 +1619,9 @@ function CalcRow({ op, label, value, semantic, bold }: {
   );
 }
 
-function ComparisonCard({ title, reel, simule, pole, right }: {
+function ComparisonCard({ title, reel, simule, pole, right, children, footer }: {
   title: string; reel: number; simule: number; pole?: Pole; right?: React.ReactNode;
+  children?: React.ReactNode; footer?: React.ReactNode;
 }) {
   const ecart = simule - reel;
   const { bg, text } = poleColor(pole);
@@ -1521,6 +1650,55 @@ function ComparisonCard({ title, reel, simule, pole, right }: {
         <span className="text-sm font-medium tabular-nums" style={{ color: ecartColor }}>
           {sign}{fmtEUR(ecart)}
         </span>
+      </div>
+      {children}
+      {footer}
+    </div>
+  );
+}
+
+function CompareRow({ label, reel, simule, semantic }: {
+  label: string; reel: number; simule: number; semantic?: boolean;
+}) {
+  const cls = (n: number) => semantic ? signClass(n) : "text-foreground";
+  return (
+    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 py-1 text-xs">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={cn("w-24 text-right tabular-nums", cls(reel))}>{fmtEUR(reel)}</span>
+      <span className={cn("w-24 text-right tabular-nums", cls(simule))}>{fmtEUR(simule)}</span>
+    </div>
+  );
+}
+
+function CapDetailCol({
+  title, titleColor, detail, capacite, reservePct, pctAnneeEcoulee,
+}: {
+  title: string;
+  titleColor: string;
+  detail: { caR: number; caObj: number; ch: number; objYTD: number; surplus: number; surplusPond: number; caPond: number; resPond: number; reserveMontant: number };
+  capacite: number;
+  reservePct: number;
+  pctAnneeEcoulee: number; // 0-100
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-[10px] uppercase tracking-wide" style={{ color: titleColor }}>{title}</p>
+      <div className="space-y-0">
+        <CalcRow op="" label="CA réel YTD" value={fmtEUR(detail.caR)} />
+        <CalcRow op="−" label="CA objectif YTD" value={`− ${fmtEUR(detail.objYTD)}`} />
+        <CalcRow op="=" label="Surplus" value={fmtEUR(detail.surplus)} />
+        <CalcRow op="×" label={`% année écoulée (${pctAnneeEcoulee.toFixed(0)}%)`} value={`× ${pctAnneeEcoulee.toFixed(0)}%`} />
+        <CalcRow op="=" label="Surplus pondéré" value={fmtEUR(detail.surplusPond)} />
+        <CalcRow op="+" label="CA objectif YTD" value={`+ ${fmtEUR(detail.objYTD)}`} />
+        <CalcRow op="=" label="CA pondéré" value={fmtEUR(detail.caPond)} />
+        <CalcRow op="−" label="Charges totales" value={`− ${fmtEUR(detail.ch)}`} />
+        <CalcRow op="=" label="Résultat pondéré" value={fmtEUR(detail.resPond)} semantic={detail.resPond} />
+        <CalcRow op="−" label={`Réserve sécurité (${reservePct.toFixed(0)}%)`}
+          value={detail.reserveMontant > 0 ? `− ${fmtEUR(detail.reserveMontant)}` : fmtEUR(0)} />
+        <div className="mt-2 border-t border-border" />
+        <div className="mt-2">
+          <CalcRow op="=" label="Capacité" value={fmtEUR(capacite)} semantic={capacite} bold />
+        </div>
       </div>
     </div>
   );
