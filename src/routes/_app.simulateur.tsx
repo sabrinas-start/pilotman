@@ -287,6 +287,8 @@ function SimulateurPage() {
   const [seasonOpen, setSeasonOpen] = useState(false);
   const [chargesFixesOpen, setChargesFixesOpen] = useState(false);
   const [salairesOpen, setSalairesOpen] = useState(false);
+  const [chargesSimOpen, setChargesSimOpen] = useState(false);
+  const [revenusSimOpen, setRevenusSimOpen] = useState(false);
   const [scope, setScope] = useState<Scope>("global");
   const [hydrated, setHydrated] = useState(false);
   const [fixesHydrated, setFixesHydrated] = useState(false);
@@ -570,7 +572,6 @@ function SimulateurPage() {
     };
   }, [real, chargesProv, salaires, scope]);
   const kpisBaseline = calculerKpis(paramsBaseline);
-  void kpisBaseline; // calculé pour comparaison future, pas encore affiché
 
   // Destructurations — conservent les noms utilisés dans le rendu
   const { capacite, capDetail, projAudio, projVideo, projTotal,
@@ -580,18 +581,31 @@ function SimulateurPage() {
   // Données graphique
   const chartData = useMemo(() => {
     const moisIdx = real.moisCourant - 1; // 0-based dernier mois réel
+    void moisIdx;
     const sa = scope === "audio" ? saisonAudio : scope === "video" ? saisonVideo : saisonAudio;
     const caObjScope = scope === "audio" ? caObjAudio : scope === "video" ? caObjVideo : caObjGlobal;
-    const caReelScope = scope === "audio" ? caReelAudio : scope === "video" ? caReelVideo : caReelTotal;
-    const chargesScope = scope === "audio" ? chargesAudioTotal : scope === "video" ? chargesVideoTotal : chargesTotal;
+    // Baseline (réel) — utilisé pour les courbes "Revenus/Charges/Solde" existantes
+    const caReelScopeBase =
+      scope === "audio" ? paramsBaseline.caReelAudio
+      : scope === "video" ? paramsBaseline.caReelVideo
+      : paramsBaseline.caReelTotal;
+    const chargesScopeBase =
+      scope === "audio" ? paramsBaseline.chargesAudioTotal
+      : scope === "video" ? paramsBaseline.chargesVideoTotal
+      : paramsBaseline.chargesTotal;
+    // Simulé — utilisé uniquement pour la courbe "Charges (simulé)"
+    const chargesScopeSim =
+      scope === "audio" ? chargesAudioTotal
+      : scope === "video" ? chargesVideoTotal
+      : chargesTotal;
 
-    // Répartition charges YTD prorata sur mois écoulés (uniforme)
     const moisEcoules = anneBlanche ? 0 : real.moisCourant;
     const moisRestants = 12 - moisEcoules;
+    void moisRestants;
 
     let cumulRev = 0;
     let cumulCh = 0;
-    // Revenus mensuels réels = caReel * (saison_i / sum_i<=current)
+    let cumulChSim = 0;
     const sumSaisonEcoulee = sa.slice(0, moisEcoules).reduce((s, v) => s + v / 100, 0) || 1;
 
     return MOIS.map((label, i) => {
@@ -599,24 +613,26 @@ function SimulateurPage() {
       const isReel = mois1 <= moisEcoules;
       const isProj = mois1 > moisEcoules;
 
-      // Revenu du mois
       let revMois = 0;
       let chMois = 0;
+      let chMoisSim = 0;
       if (isReel) {
-        revMois = caReelScope * (sa[i] / 100) / sumSaisonEcoulee;
-        chMois = chargesScope / Math.max(moisEcoules, 1);
+        revMois = caReelScopeBase * (sa[i] / 100) / sumSaisonEcoulee;
+        chMois = chargesScopeBase / Math.max(moisEcoules, 1);
+        chMoisSim = chargesScopeSim / Math.max(moisEcoules, 1);
       } else {
-        // projeté : objectif * saison
         revMois = caObjScope * (sa[i] / 100);
-        // charges projetées : on étend la moyenne actuelle ou rien si année blanche
         if (anneBlanche) {
-          chMois = chargesScope / 12;
+          chMois = chargesScopeBase / 12;
+          chMoisSim = chargesScopeSim / 12;
         } else {
-          chMois = (chargesScope / Math.max(moisEcoules, 1));
+          chMois = chargesScopeBase / Math.max(moisEcoules, 1);
+          chMoisSim = chargesScopeSim / Math.max(moisEcoules, 1);
         }
       }
       cumulRev += revMois;
       cumulCh += chMois;
+      cumulChSim += chMoisSim;
 
       return {
         mois: label,
@@ -626,12 +642,11 @@ function SimulateurPage() {
         revenusProj: isProj || mois1 === moisEcoules ? cumulRev : null,
         chargesProj: isProj || mois1 === moisEcoules ? cumulCh : null,
         soldeProj: isProj || mois1 === moisEcoules ? cumulRev - cumulCh : null,
+        chargesSim: cumulChSim,
       };
     });
-    // moisRestants used implicitly above
-    void moisRestants;
   }, [scope, saisonAudio, saisonVideo, caObjAudio, caObjVideo, caObjGlobal,
-      caReelAudio, caReelVideo, caReelTotal, chargesAudioTotal, chargesVideoTotal,
+      paramsBaseline, chargesAudioTotal, chargesVideoTotal,
       chargesTotal, real.moisCourant, anneBlanche]);
 
   if (loading && !hydrated) {
@@ -735,112 +750,6 @@ function SimulateurPage() {
           <Field label="Taux Option" suffix="%" value={tauxOption} onChange={setTauxOption} />
           <Field label="Taux Confirmé" suffix="%" value={tauxConfirme} onChange={setTauxConfirme} />
         </Section>
-
-        {/* Charges simulées */}
-        <Section title="Charges simulées">
-          {simCharges.map((c) => (
-            <div key={c.id} className="rounded-md border border-border p-2 space-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <Input
-                  value={c.label}
-                  onChange={(e) => updateCharge(c.id, { label: e.target.value })}
-                  placeholder="Libellé"
-                  className="h-7 flex-1 text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeCharge(c.id)}
-                  className="text-muted-foreground hover:text-destructive"
-                  title="Supprimer"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-1.5">
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={c.montant}
-                    onChange={(e) => updateCharge(c.id, { montant: parseFloat(e.target.value) || 0 })}
-                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                    className="h-7 pr-5 text-xs"
-                  />
-                  <span className="pointer-events-none absolute inset-y-0 right-1.5 flex items-center text-[10px] text-muted-foreground">€</span>
-                </div>
-                <select
-                  value={c.pole}
-                  onChange={(e) => updateCharge(c.id, { pole: e.target.value as ChargePole })}
-                  className="flex h-7 w-full rounded-md border border-input bg-transparent px-2 text-xs"
-                >
-                  <option value="global">Global</option>
-                  <option value="audio">Audio</option>
-                  <option value="video">Vidéo</option>
-                </select>
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addCharge}
-            className="flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:border-foreground/40"
-          >
-            <Plus className="h-3 w-3" />
-            Ajouter une charge
-          </button>
-        </Section>
-
-        {/* Revenus simulés */}
-        <Section title="Revenus simulés">
-          {simRevenus.map((c) => (
-            <div key={c.id} className="rounded-md border border-border p-2 space-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <Input
-                  value={c.label}
-                  onChange={(e) => updateRevenu(c.id, { label: e.target.value })}
-                  placeholder="Libellé"
-                  className="h-7 flex-1 text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeRevenu(c.id)}
-                  className="text-muted-foreground hover:text-destructive"
-                  title="Supprimer"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-1.5">
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={c.montant}
-                    onChange={(e) => updateRevenu(c.id, { montant: parseFloat(e.target.value) || 0 })}
-                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                    className="h-7 pr-5 text-xs"
-                  />
-                  <span className="pointer-events-none absolute inset-y-0 right-1.5 flex items-center text-[10px] text-muted-foreground">€</span>
-                </div>
-                <select
-                  value={c.pole}
-                  onChange={(e) => updateRevenu(c.id, { pole: e.target.value as ChargePole })}
-                  className="flex h-7 w-full rounded-md border border-input bg-transparent px-2 text-xs"
-                >
-                  <option value="global">Global</option>
-                  <option value="audio">Audio</option>
-                  <option value="video">Vidéo</option>
-                </select>
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addRevenu}
-            className="flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:border-foreground/40"
-          >
-            <Plus className="h-3 w-3" />
-            Ajouter un revenu
-          </button>
-        </Section>
       </aside>
 
       {/* ─────────── Zone droite ─────────── */}
@@ -854,7 +763,7 @@ function SimulateurPage() {
         </header>
 
         {/* Saisonnalité */}
-        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820" }}>
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #1D9E75", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
           <button
             type="button"
             onClick={() => setSeasonOpen((o) => !o)}
@@ -876,7 +785,7 @@ function SimulateurPage() {
         </div>
 
         {/* Charges fixes par catégorie */}
-        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820" }}>
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -996,7 +905,7 @@ function SimulateurPage() {
         </div>
 
         {/* Salaires par salarié */}
-        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820" }}>
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -1083,7 +992,151 @@ function SimulateurPage() {
           )}
         </div>
 
-        {/* Cartes métriques */}
+        {/* Charges simulées */}
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setChargesSimOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-medium text-foreground"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", chargesSimOpen && "rotate-180")} />
+              Charges simulées
+              <span className="text-xs text-muted-foreground">
+                ({simCharges.length} ligne{simCharges.length > 1 ? "s" : ""})
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={addCharge}
+              className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <Plus className="h-3 w-3" />
+              Ajouter une charge
+            </button>
+          </div>
+          {chargesSimOpen && (
+            <div className="mt-4 space-y-1.5">
+              {simCharges.length === 0 && (
+                <p className="text-xs text-muted-foreground">Aucune charge simulée.</p>
+              )}
+              {simCharges.map((c) => (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_140px_110px_32px] md:gap-3"
+                >
+                  <Input
+                    value={c.label}
+                    onChange={(e) => updateCharge(c.id, { label: e.target.value })}
+                    placeholder="Libellé"
+                    className="h-8 text-sm"
+                  />
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={c.montant}
+                      onChange={(e) => updateCharge(c.id, { montant: parseFloat(e.target.value) || 0 })}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                      className="h-8 pr-6 text-right tabular-nums"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">€</span>
+                  </div>
+                  <select
+                    value={c.pole}
+                    onChange={(e) => updateCharge(c.id, { pole: e.target.value as ChargePole })}
+                    className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs"
+                  >
+                    <option value="global">Global</option>
+                    <option value="audio">Audio</option>
+                    <option value="video">Vidéo</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeCharge(c.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Revenus simulés */}
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #1D9E75", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setRevenusSimOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-medium text-foreground"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", revenusSimOpen && "rotate-180")} />
+              Revenus simulés
+              <span className="text-xs text-muted-foreground">
+                ({simRevenus.length} ligne{simRevenus.length > 1 ? "s" : ""})
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={addRevenu}
+              className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              <Plus className="h-3 w-3" />
+              Ajouter un revenu
+            </button>
+          </div>
+          {revenusSimOpen && (
+            <div className="mt-4 space-y-1.5">
+              {simRevenus.length === 0 && (
+                <p className="text-xs text-muted-foreground">Aucun revenu simulé.</p>
+              )}
+              {simRevenus.map((c) => (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_140px_110px_32px] md:gap-3"
+                >
+                  <Input
+                    value={c.label}
+                    onChange={(e) => updateRevenu(c.id, { label: e.target.value })}
+                    placeholder="Libellé"
+                    className="h-8 text-sm"
+                  />
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={c.montant}
+                      onChange={(e) => updateRevenu(c.id, { montant: parseFloat(e.target.value) || 0 })}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                      className="h-8 pr-6 text-right tabular-nums"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[10px] text-muted-foreground">€</span>
+                  </div>
+                  <select
+                    value={c.pole}
+                    onChange={(e) => updateRevenu(c.id, { pole: e.target.value as ChargePole })}
+                    className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs"
+                  >
+                    <option value="global">Global</option>
+                    <option value="audio">Audio</option>
+                    <option value="video">Vidéo</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeRevenu(c.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ─── Résultats ─── */}
         {anneBlanche ? (
           <section className="grid grid-cols-1 gap-4">
             <MetricCard title="CA objectif annuel" badge>
@@ -1096,50 +1149,30 @@ function SimulateurPage() {
           </section>
         ) : (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <MetricCard title="CA réel · YTD" badge>
-              <p className="text-2xl font-semibold text-foreground">{fmtEUR(caReelTotal)}</p>
-              <ul className="mt-3 space-y-1 text-sm">
-                <PoleLine label="Audio" value={fmtEUR(caReelAudio)} pole="audio" />
-                <PoleLine label="Vidéo" value={fmtEUR(caReelVideo)} pole="video" />
-                <PoleLine label="Pôle" value={fmtEUR(caReelPole)} />
-              </ul>
-            </MetricCard>
-            <MetricCard title="Projection fin d'année" badge>
-              <p className="text-2xl font-semibold text-foreground">{fmtEUR(projTotal)}</p>
-              <ul className="mt-3 space-y-1 text-sm">
-                <PoleLine label="Audio" value={fmtEUR(projAudio)} pole="audio" />
-                <PoleLine label="Vidéo" value={fmtEUR(projVideo)} pole="video" />
-              </ul>
-            </MetricCard>
+            <ComparisonCard
+              title="Projection fin d'année"
+              reel={kpisBaseline.projTotal}
+              simule={kpisSimule.projTotal}
+            />
+            <ComparisonCard
+              title="💡 Capacité d'investissement"
+              reel={kpisBaseline.capacite[scope]}
+              simule={kpisSimule.capacite[scope]}
+              right={<ScopeToggle scope={scope} setScope={setScope} />}
+            />
           </section>
         )}
 
-        {/* Enveloppes (mode normal seulement) */}
-        {!anneBlanche && (
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <EnvelopeCard pole="audio" title="🎙 Enveloppe Audio" value={enveloppeAudio} ca={caReelAudio} charges={chargesAudioTotal} />
-            <EnvelopeCard pole="video" title="🎬 Enveloppe Vidéo" value={enveloppeVideo} ca={caReelVideo} charges={chargesVideoTotal} />
-          </section>
-        )}
-
-        {/* Capacité d'investissement */}
+        {/* Détail Capacité (déroulant) */}
         <section>
           <div className="rounded-lg border border-border bg-surface p-5">
             <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
-                  💡 Capacité d'investissement
-                </h3>
-                <SimuleBadge />
-              </div>
-              <ScopeToggle scope={scope} setScope={setScope} />
+              <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
+                Détail du calcul · Capacité (simulé)
+              </h3>
+              <SimuleBadge />
             </div>
-            <p className={cn("text-3xl font-semibold", signClass(capacite[scope]))}>
-              {fmtEUR(capacite[scope])}
-            </p>
-
-            <div className="mt-5 border-t border-border" />
-            <div className="mt-4 space-y-0">
+            <div className="space-y-0">
               {anneBlanche ? (
                 <>
                   <CalcRow op="" label="CA objectif" value={fmtEUR(capDetail.caObj)} />
@@ -1182,7 +1215,7 @@ function SimulateurPage() {
           <div className="rounded-lg border border-border bg-surface p-5">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
-                Projection mensuelle cumulée
+                Revenus vs Charges cumulées
               </h3>
               <ScopeToggle scope={scope} setScope={setScope} />
             </div>
@@ -1203,19 +1236,36 @@ function SimulateurPage() {
                   />
                   <Legend wrapperStyle={{ fontSize: 11, color: "#888" }} />
                   <ReferenceLine y={0} stroke="#2e2e2e" />
-                  {/* Réelles */}
                   <Line type="monotone" dataKey="revenusReel" name="Revenus cumulés" stroke={C_POS} strokeWidth={2} dot={false} connectNulls={false} />
                   <Line type="monotone" dataKey="chargesReel" name="Charges cumulées" stroke={C_NEG} strokeWidth={2} dot={false} connectNulls={false} />
                   <Line type="monotone" dataKey="soldeReel" name="Solde" stroke={C_ACCENT} strokeWidth={2} strokeDasharray="4 4" dot={false} connectNulls={false} />
-                  {/* Projetées */}
                   <Line type="monotone" dataKey="revenusProj" name="Revenus (proj.)" stroke={C_POS} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
                   <Line type="monotone" dataKey="chargesProj" name="Charges (proj.)" stroke={C_NEG} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
                   <Line type="monotone" dataKey="soldeProj" name="Solde (proj.)" stroke={C_ACCENT} strokeWidth={2} strokeDasharray="2 4" strokeOpacity={0.55} dot={false} connectNulls={false} legendType="none" />
+                  <Line type="monotone" dataKey="chargesSim" name="Charges (simulé)" stroke="#D85A30" strokeWidth={1} strokeDasharray="2 3" strokeOpacity={0.4} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
         </section>
+
+        {/* Enveloppes (mode normal seulement) */}
+        {!anneBlanche && (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <ComparisonCard
+              title="🎙 Enveloppe Audio"
+              reel={kpisBaseline.enveloppeAudio}
+              simule={kpisSimule.enveloppeAudio}
+              pole="audio"
+            />
+            <ComparisonCard
+              title="🎬 Enveloppe Vidéo"
+              reel={kpisBaseline.enveloppeVideo}
+              simule={kpisSimule.enveloppeVideo}
+              pole="video"
+            />
+          </section>
+        )}
       </div>
     </div>
   );
@@ -1425,6 +1475,41 @@ function CalcRow({ op, label, value, semantic, bold }: {
       <span className="font-mono" style={{ color: "#555" }}>{op}</span>
       <span style={{ color: labelColor }}>{label}</span>
       <span className="tabular-nums" style={{ color: valueColor }}>{value}</span>
+    </div>
+  );
+}
+
+function ComparisonCard({ title, reel, simule, pole, right }: {
+  title: string; reel: number; simule: number; pole?: Pole; right?: React.ReactNode;
+}) {
+  const ecart = simule - reel;
+  const { bg, text } = poleColor(pole);
+  const ecartColor = ecart > 0 ? "var(--color-positive)"
+    : ecart < 0 ? "var(--color-destructive)"
+    : "var(--color-muted-foreground)";
+  const sign = ecart > 0 ? "+" : "";
+  return (
+    <div className="rounded-lg border border-border p-5" style={pole ? { backgroundColor: bg } : { backgroundColor: "var(--color-surface, #1a1a22)" }}>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-medium" style={{ color: text ?? "var(--color-muted-foreground)" }}>{title}</h3>
+        {right}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Réel</p>
+          <p className={cn("text-xl font-semibold tabular-nums", signClass(reel))}>{fmtEUR(reel)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wide" style={{ color: C_ACCENT }}>Simulé</p>
+          <p className={cn("text-xl font-semibold tabular-nums", signClass(simule))}>{fmtEUR(simule)}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
+        <span className="text-xs text-muted-foreground">Écart</span>
+        <span className="text-sm font-medium tabular-nums" style={{ color: ecartColor }}>
+          {sign}{fmtEUR(ecart)}
+        </span>
+      </div>
     </div>
   );
 }
