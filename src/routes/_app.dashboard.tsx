@@ -57,7 +57,7 @@ function DashboardPage() {
     filterByFormula: `AND({statut_rentman}='Retour',YEAR({date_facturation})=${ANNEE})`,
   });
   const salariesMoisQ = useAirtable("tbl0bVuIyeIOXbjGH", {
-    filterByFormula: `AND({annee}=${ANNEE},{mois}<=${moisCourant})`,
+    filterByFormula: `{annee}=${ANNEE}`,
   });
 
   const loading =
@@ -123,7 +123,10 @@ function DashboardPage() {
   const chargesVideoTotal = chargesVideo + chargesCommunes * pctVideo;
 
   // Salaires
-  const salairesImputes = (salariesMoisQ.data ?? []).reduce(
+  const salairesImputes = (salariesMoisQ.data ?? [])
+    .filter((r) => num(r.fields.mois) <= moisCourant)
+    .reduce((s, r) => s + num(r.fields.montant_impute), 0);
+  const salairesAnnee = (salariesMoisQ.data ?? []).reduce(
     (s, r) => s + num(r.fields.montant_impute),
     0,
   );
@@ -206,6 +209,10 @@ function DashboardPage() {
   const caProjecte = caTotal + objectifsMoisRestants;
   const ecartProjecte = caProjecte - caObjectifGlobal;
   const pctRealisationAnnuelProjecte = caObjectifGlobal > 0 ? caProjecte / caObjectifGlobal : 0;
+
+  const chargesProvAnnee = chargesProv.reduce((s, r) => s + num(r.fields.montant_provisionne), 0);
+  const chargesProjeteesAnnuelles = chargesReelTotal + chargesProvAnnee + salairesAnnee;
+  const soldeProjeteAnnuel = caProjecte - chargesProjeteesAnnuelles;
 
   const dateSnapshot = str(metriques.date_snapshot) || "—";
 
@@ -334,7 +341,7 @@ function DashboardPage() {
             <p className="mt-1 text-xs text-muted-foreground">
               CA réel YTD + objectifs mois restants
             </p>
-            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
               <div>
                 <p className="text-xs text-muted-foreground">Objectif annuel</p>
                 <p className="mt-1 text-base font-medium tabular-nums text-foreground">
@@ -357,6 +364,18 @@ function DashboardPage() {
                 <p className="text-xs text-muted-foreground">Pipe attendu</p>
                 <p className="mt-1 text-base font-medium tabular-nums" style={{ color: C_ACCENT }}>
                   {fmtEUR(pipeRetenuTotal)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Charges projetées</p>
+                <p className="mt-1 text-base font-medium tabular-nums text-foreground">
+                  {fmtEUR(chargesProjeteesAnnuelles)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Solde projeté annuel</p>
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(soldeProjeteAnnuel))}>
+                  {fmtEUR(soldeProjeteAnnuel)}
                 </p>
               </div>
             </div>
