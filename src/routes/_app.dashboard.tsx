@@ -408,23 +408,43 @@ function DashboardPage() {
 
       {/* BLOC 2 — Capacité d'investissement (masqué pour les pôles) */}
       {!isPoleOnly && (
-      <section>
+      <section className="space-y-2">
+        <div className="flex justify-end">
+          <div className="flex gap-1">
+            {(["Global", "Audio", "Vidéo"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setCardsScope(s)}
+                className={cn(
+                  "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                  cardsScope === s
+                    ? "border-border bg-muted text-foreground"
+                    : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="rounded-lg border border-border bg-surface p-6">
           {loading ? (
             <Skeleton className="h-64 w-full" />
           ) : (
             <CapaciteCard
-              caTotal={caTotal}
-              caObjectifYTD={caObjectifYTD}
-              surplus={surplus}
-              surplusPondere={surplusPondere}
+              title={capaciteTitle}
+              caTotal={selectedVar.caTotal}
+              caObjectifYTD={selectedVar.caObjectifYTD}
+              surplus={selectedVar.surplus}
+              surplusPondere={selectedVar.surplusPondere}
               pctAnneeEcoulee={pctAnneeEcoulee}
-              caPondere={caPondere}
-              chargesYTD={chargesYTD}
-              resPondere={resPondere}
+              caPondere={selectedVar.caPondere}
+              chargesYTD={selectedVar.chargesYTD}
+              resPondere={selectedVar.resPondere}
               reserve={reserve}
-              montantReserve={montantReserve}
-              indicateur2={indicateur2}
+              montantReserve={selectedVar.montantReserve}
+              indicateur2={selectedVar.indicateur2}
             />
           )}
         </div>
