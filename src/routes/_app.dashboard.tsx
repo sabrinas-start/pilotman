@@ -230,7 +230,7 @@ function DashboardPage() {
         )}
       >
         {!isPoleOnly && (
-          <BaseCard loading={loading} label="État réel · YTD">
+          <BaseCard loading={loading} label="État réel · YTD" highlight>
             <p className={cn("text-3xl font-semibold", signClass(caTotal - chargesTotalGlobal))}>
               {fmtEUR(caTotal - chargesTotalGlobal)}
             </p>
