@@ -280,12 +280,16 @@ function SimulateurPage() {
   const [chargesFixesEdit, setChargesFixesEdit] =
     useState<Record<string, { montant: number; taux: number }>>({});
   const [openGroupes, setOpenGroupes] = useState<Record<string, boolean>>({});
+  const [salairesEdit, setSalairesEdit] =
+    useState<Record<string, { montant: number; taux: number }>>({});
 
   const [seasonOpen, setSeasonOpen] = useState(false);
   const [chargesFixesOpen, setChargesFixesOpen] = useState(false);
+  const [salairesOpen, setSalairesOpen] = useState(false);
   const [scope, setScope] = useState<Scope>("global");
   const [hydrated, setHydrated] = useState(false);
   const [fixesHydrated, setFixesHydrated] = useState(false);
+  const [salHydrated, setSalHydrated] = useState(false);
 
   const reset = () => {
     setAnneBlanche(false);
@@ -323,6 +327,7 @@ function SimulateurPage() {
     ]);
     setHydrated(false);
     setFixesHydrated(false);
+    setSalHydrated(false);
   };
 
   // ── Charges fixes par catégorie (source de chProv) ───────────────────
@@ -430,13 +435,47 @@ function SimulateurPage() {
   }, [chargesFixesBase, chargesFixesEdit]);
   const chProv = anneBlanche ? chProvAnnuel : chProvAnnuel * (real.moisCourant / 12);
 
-  // Salaires
-  const sumSal = useMemo(() => {
-    const filtered = anneBlanche
-      ? salaires
-      : salaires.filter((r) => num(r.fields.mois) <= real.moisCourant);
-    return filtered.reduce((s, r) => s + num(r.fields.montant_impute), 0);
-  }, [salaires, anneBlanche, real.moisCourant]);
+  // ── Salaires par salarié (source de sumSal) ──────────────────────────
+  type SalarieRow = { id: string; nom: string; montant: number; taux: number };
+  const salairesBase = useMemo<SalarieRow[]>(() => {
+    const m = new Map<string, number>();
+    for (const r of salaires) {
+      const nom = str(r.fields.nom_salarie);
+      if (!nom) continue;
+      m.set(nom, (m.get(nom) ?? 0) + num(r.fields.montant_impute));
+    }
+    return Array.from(m.entries()).map(([nom, somme]) => ({
+      id: nom,
+      nom,
+      montant: Math.round(somme * 100) / 100,
+      taux: 100,
+    }));
+  }, [salaires]);
+
+  const resetSalaires = () => {
+    const init: Record<string, { montant: number; taux: number }> = {};
+    for (const r of salairesBase) init[r.id] = { montant: r.montant, taux: r.taux };
+    setSalairesEdit(init);
+  };
+
+  useEffect(() => {
+    if (!salHydrated && salairesQ.data && salairesBase.length > 0) {
+      resetSalaires();
+      setSalHydrated(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salHydrated, salairesQ.data, salairesBase]);
+
+  // Salaires — source : tableau "Salaires par salarié" (édité ou Airtable)
+  const sumSalAnnuel = useMemo(() => {
+    return salairesBase.reduce((s, r) => {
+      const e = salairesEdit[r.id];
+      const montant = e?.montant ?? r.montant;
+      const taux = e?.taux ?? r.taux;
+      return s + montant * (taux / 100);
+    }, 0);
+  }, [salairesBase, salairesEdit]);
+  const sumSal = anneBlanche ? sumSalAnnuel : sumSalAnnuel * (real.moisCourant / 12);
 
   // Charges simulées (somme + ventilation)
   const simChargesTotal = simCharges.reduce((s, c) => s + c.montant, 0);
@@ -866,6 +905,94 @@ function SimulateurPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* Salaires par salarié */}
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820" }}>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setSalairesOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-medium text-foreground"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", salairesOpen && "rotate-180")} />
+              Salaires par salarié
+              <span className="text-xs text-muted-foreground">
+                ({fmtEUR(sumSalAnnuel)} / an)
+              </span>
+            </button>
+            {salairesOpen && (
+              <button
+                type="button"
+                onClick={resetSalaires}
+                className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Réinitialiser ce tableau
+              </button>
+            )}
+          </div>
+          {salairesOpen && (
+            <div className="mt-4">
+              <div className="hidden grid-cols-[1.4fr_120px_90px_120px] gap-3 pb-2 text-[11px] uppercase tracking-wide text-muted-foreground md:grid">
+                <div>Salarié</div>
+                <div className="text-right">Montant annuel</div>
+                <div className="text-right">Taux</div>
+                <div className="text-right">Imputé</div>
+              </div>
+              <div className="space-y-1.5">
+                {salairesBase.map((r) => {
+                  const e = salairesEdit[r.id];
+                  const montant = e?.montant ?? r.montant;
+                  const taux = e?.taux ?? r.taux;
+                  const impute = montant * (taux / 100);
+                  const modifie = !!e && (e.montant !== r.montant || e.taux !== r.taux);
+                  return (
+                    <div
+                      key={r.id}
+                      className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_120px_90px_120px] md:gap-3"
+                    >
+                      <div className="flex items-center gap-2 text-sm text-foreground">
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            modifie ? "bg-sky-400" : "bg-transparent",
+                          )}
+                          aria-hidden
+                        />
+                        <span>{r.nom}</span>
+                      </div>
+                      <Input
+                        type="number"
+                        value={montant}
+                        onChange={(ev) => {
+                          const v = Number(ev.target.value) || 0;
+                          setSalairesEdit((p) => ({
+                            ...p,
+                            [r.id]: { montant: v, taux: p[r.id]?.taux ?? r.taux },
+                          }));
+                        }}
+                        className="h-8 text-right tabular-nums"
+                      />
+                      <Input
+                        type="number"
+                        value={taux}
+                        onChange={(ev) => {
+                          const v = Number(ev.target.value) || 0;
+                          setSalairesEdit((p) => ({
+                            ...p,
+                            [r.id]: { montant: p[r.id]?.montant ?? r.montant, taux: v },
+                          }));
+                        }}
+                        className="h-8 text-right tabular-nums"
+                      />
+                      <div className="text-right text-sm tabular-nums text-foreground">{fmtEUR(impute)}</div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
