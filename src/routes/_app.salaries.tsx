@@ -65,6 +65,7 @@ type SalarieMois = {
   fonpeps_mensuel: number;
   taux_imputation: number;
   montant_impute: number;
+  montant_prime: number;
 };
 
 const fmtEUR = (n: number) =>
