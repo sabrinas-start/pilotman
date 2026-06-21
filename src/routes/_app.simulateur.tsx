@@ -895,12 +895,11 @@ function SimulateurPage() {
                     </button>
                     {isOpen && (
                       <div className="border-t border-border px-3 py-2">
-                        <div className="hidden grid-cols-[1.4fr_120px_90px_120px_70px] gap-3 pb-2 text-[11px] uppercase tracking-wide text-muted-foreground md:grid">
+                        <div className="hidden grid-cols-[1.4fr_1fr_0.7fr_1fr] gap-3 pb-2 text-[11px] uppercase tracking-wide text-muted-foreground md:grid">
                           <div>Catégorie</div>
                           <div className="text-right">Montant annuel</div>
                           <div className="text-right">Taux</div>
                           <div className="text-right">Imputé</div>
-                          <div className="text-right">Pôle</div>
                         </div>
                         <div className="space-y-1.5">
                           {g.rows.map((r) => {
