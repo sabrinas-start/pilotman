@@ -280,12 +280,16 @@ function SimulateurPage() {
   const [chargesFixesEdit, setChargesFixesEdit] =
     useState<Record<string, { montant: number; taux: number }>>({});
   const [openGroupes, setOpenGroupes] = useState<Record<string, boolean>>({});
+  const [salairesEdit, setSalairesEdit] =
+    useState<Record<string, { montant: number; taux: number }>>({});
 
   const [seasonOpen, setSeasonOpen] = useState(false);
   const [chargesFixesOpen, setChargesFixesOpen] = useState(false);
+  const [salairesOpen, setSalairesOpen] = useState(false);
   const [scope, setScope] = useState<Scope>("global");
   const [hydrated, setHydrated] = useState(false);
   const [fixesHydrated, setFixesHydrated] = useState(false);
+  const [salHydrated, setSalHydrated] = useState(false);
 
   const reset = () => {
     setAnneBlanche(false);
