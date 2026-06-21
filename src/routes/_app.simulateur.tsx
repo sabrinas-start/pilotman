@@ -504,18 +504,9 @@ function SimulateurPage() {
     0,
   );
 
-  // Revenus simulés (somme + ventilation, même logique que simCharges)
-  const simRevenusTotal = simRevenus.reduce((s, c) => s + c.montant, 0);
-  const simRevenusAudio = simRevenus.reduce(
-    (s, c) =>
-      s + (c.pole === "audio" ? c.montant : c.pole === "global" ? c.montant * pAudio : 0),
-    0,
-  );
-  const simRevenusVideo = simRevenus.reduce(
-    (s, c) =>
-      s + (c.pole === "video" ? c.montant : c.pole === "global" ? c.montant * pVideo : 0),
-    0,
-  );
+  // (Revenus simulés sont déjà ventilés via _simRevenusAudio/_simRevenusVideo plus haut,
+  //  et abondent directement caReelAudio/Video/Total.)
+
 
 
   // Charges totales
