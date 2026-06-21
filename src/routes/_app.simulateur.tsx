@@ -56,6 +56,111 @@ const C_POS = "#4CAF7D";
 const C_NEG = "#E05252";
 const C_ACCENT = "#E8C547";
 
+type KpisParams = {
+  caObjAudio: number;
+  caObjVideo: number;
+  pctAudio: number;         // 0-100
+  reserve: number;          // 0-100
+  plancherAudio: number;
+  plafondAudio: number;
+  plancherVideo: number;
+  plafondVideo: number;
+  tauxOption: number;       // 0-100
+  tauxConfirme: number;     // 0-100
+  saisonAudio: number[];    // chaque valeur en 0-100
+  saisonVideo: number[];
+  anneBlanche: boolean;
+  caReelAudio: number;
+  caReelVideo: number;
+  caReelTotal: number;
+  chargesAudioTotal: number;
+  chargesVideoTotal: number;
+  chargesTotal: number;
+  moisCourant: number;
+  scope: Scope;
+};
+
+function calculerKpis(p: KpisParams) {
+  const caObjGlobal = p.caObjAudio + p.caObjVideo;
+  const reserveDecimal = p.reserve / 100;
+  const pctAnneeEcoulee = p.saisonAudio
+    .slice(0, p.moisCourant)
+    .reduce((s, v) => s + v / 100, 0);
+
+  // Capacité — calcul standard ou simplifié
+  let capacite: {
+    audio: number;
+    video: number;
+    global: number;
+    mode: "normal" | "blanche";
+  };
+  if (p.anneBlanche) {
+    const calc = (caObj: number, charges: number) =>
+      caObj - charges - caObj * reserveDecimal;
+    const audio = calc(p.caObjAudio, p.chargesAudioTotal);
+    const video = calc(p.caObjVideo, p.chargesVideoTotal);
+    const global = calc(caObjGlobal, p.chargesTotal);
+    capacite = { audio, video, global, mode: "blanche" as const };
+  } else {
+    const calcPole = (caR: number, caObj: number, ch: number) => {
+      const objYTD = caObj * pctAnneeEcoulee;
+      const surplus = caR - objYTD;
+      const caPond = surplus >= 0 ? objYTD + surplus * pctAnneeEcoulee : caR;
+      const resP = caPond - ch;
+      return resP > 0 ? resP * (1 - reserveDecimal) : resP;
+    };
+    capacite = {
+      audio: calcPole(p.caReelAudio, p.caObjAudio, p.chargesAudioTotal),
+      video: calcPole(p.caReelVideo, p.caObjVideo, p.chargesVideoTotal),
+      global: calcPole(p.caReelTotal, caObjGlobal, p.chargesTotal),
+      mode: "normal" as const,
+    };
+  }
+
+  // Détail capacité scope sélectionné
+  const caR =
+    p.scope === "audio" ? p.caReelAudio : p.scope === "video" ? p.caReelVideo : p.caReelTotal;
+  const caObj =
+    p.scope === "audio" ? p.caObjAudio : p.scope === "video" ? p.caObjVideo : caObjGlobal;
+  const ch =
+    p.scope === "audio" ? p.chargesAudioTotal : p.scope === "video" ? p.chargesVideoTotal : p.chargesTotal;
+  const objYTD = caObj * pctAnneeEcoulee;
+  const surplus = caR - objYTD;
+  const surplusPond = surplus * pctAnneeEcoulee;
+  const caPond = surplus >= 0 ? objYTD + surplusPond : caR;
+  const resPond = caPond - ch;
+  const reserveMontant = resPond > 0 ? resPond * reserveDecimal : 0;
+  const capDetail = { caR, caObj, ch, objYTD, surplus, surplusPond, caPond, resPond, reserveMontant };
+
+  // Projection
+  const restantA = p.saisonAudio.slice(p.moisCourant).reduce((s, v) => s + v / 100, 0);
+  const projAudio = p.caReelAudio + p.caObjAudio * restantA;
+  const restantV = p.saisonVideo.slice(p.moisCourant).reduce((s, v) => s + v / 100, 0);
+  const projVideo = p.caReelVideo + p.caObjVideo * restantV;
+  const projTotal = projAudio + projVideo;
+
+  // Enveloppes
+  const resT = p.caReelTotal - p.chargesTotal;
+  const resA = p.caReelAudio - p.chargesAudioTotal;
+  const resV = p.caReelVideo - p.chargesVideoTotal;
+  const sommeAV = resA + resV;
+  const partAudio = sommeAV > 0 ? Math.min(resA / sommeAV, 1) : 0.5;
+  const partVideo = sommeAV > 0 ? Math.min(resV / sommeAV, 1) : 0.5;
+  const maxAudio = p.plafondAudio > 0 ? p.plafondAudio : Infinity;
+  const maxVideo = p.plafondVideo > 0 ? p.plafondVideo : Infinity;
+  const enveloppeAudio =
+    resT > 0 ? Math.min(Math.max(resT * partAudio, p.plancherAudio), maxAudio) : p.plancherAudio;
+  const enveloppeVideo =
+    resT > 0 ? Math.min(Math.max(resT * partVideo, p.plancherVideo), maxVideo) : p.plancherVideo;
+
+  return {
+    capacite, capDetail,
+    projAudio, projVideo, projTotal,
+    enveloppeAudio, enveloppeVideo,
+    resT, resA, resV,
+  };
+}
+
 function SimulateurPage() {
   const metriquesQ = useAirtable("tblNznOYtuFDUI3df", {
     maxRecords: 1,
