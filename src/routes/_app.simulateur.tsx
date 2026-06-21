@@ -735,6 +735,126 @@ function SimulateurPage() {
           )}
         </div>
 
+        {/* Charges fixes par catégorie */}
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820" }}>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setChargesFixesOpen((o) => !o)}
+              className="flex items-center gap-2 text-sm font-medium text-foreground"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", chargesFixesOpen && "rotate-180")} />
+              Charges fixes par catégorie
+              <span className="text-xs text-muted-foreground">
+                ({fmtEUR(chProvAnnuel)} / an)
+              </span>
+            </button>
+            {chargesFixesOpen && (
+              <button
+                type="button"
+                onClick={resetChargesFixes}
+                className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Réinitialiser ce tableau
+              </button>
+            )}
+          </div>
+          {chargesFixesOpen && (
+            <div className="mt-4 space-y-2">
+              {chargesFixesGroupes.map((g) => {
+                const sousTotal = g.rows.reduce((s, r) => {
+                  const e = chargesFixesEdit[r.id];
+                  const m = e?.montant ?? r.montant;
+                  const t = e?.taux ?? r.taux;
+                  return s + m * (t / 100);
+                }, 0);
+                const isOpen = !!openGroupes[g.type_charge];
+                return (
+                  <div key={g.type_charge} className="rounded-md border border-border" style={{ backgroundColor: "#1F1F2A" }}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenGroupes((p) => ({ ...p, [g.type_charge]: !p[g.type_charge] }))}
+                      className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-foreground"
+                    >
+                      <span className="flex items-center gap-2">
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+                        <span className="font-medium">{g.type_charge || "—"}</span>
+                        <span className="text-xs text-muted-foreground">({g.rows.length})</span>
+                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground">{fmtEUR(sousTotal)}</span>
+                    </button>
+                    {isOpen && (
+                      <div className="border-t border-border px-3 py-2">
+                        <div className="hidden grid-cols-[1.4fr_120px_90px_120px_70px] gap-3 pb-2 text-[11px] uppercase tracking-wide text-muted-foreground md:grid">
+                          <div>Catégorie</div>
+                          <div className="text-right">Montant annuel</div>
+                          <div className="text-right">Taux</div>
+                          <div className="text-right">Imputé</div>
+                          <div className="text-right">Pôle</div>
+                        </div>
+                        <div className="space-y-1.5">
+                          {g.rows.map((r) => {
+                            const e = chargesFixesEdit[r.id];
+                            const montant = e?.montant ?? r.montant;
+                            const taux = e?.taux ?? r.taux;
+                            const impute = montant * (taux / 100);
+                            const modifie = !!e && (e.montant !== r.montant || e.taux !== r.taux);
+                            const poleLabel = r.pole === "audio" ? "Audio" : r.pole === "video" ? "Vidéo" : "Global";
+                            return (
+                              <div
+                                key={r.id}
+                                className="grid grid-cols-1 items-center gap-2 md:grid-cols-[1.4fr_120px_90px_120px_70px] md:gap-3"
+                              >
+                                <div className="flex items-center gap-2 text-sm text-foreground">
+                                  <span
+                                    className={cn(
+                                      "h-1.5 w-1.5 rounded-full",
+                                      modifie ? "bg-sky-400" : "bg-transparent",
+                                    )}
+                                    aria-hidden
+                                  />
+                                  <span>{r.categorie || r.type_charge}</span>
+                                </div>
+                                <Input
+                                  type="number"
+                                  value={montant}
+                                  onChange={(ev) => {
+                                    const v = Number(ev.target.value) || 0;
+                                    setChargesFixesEdit((p) => ({
+                                      ...p,
+                                      [r.id]: { montant: v, taux: p[r.id]?.taux ?? r.taux },
+                                    }));
+                                  }}
+                                  className="h-8 text-right tabular-nums"
+                                />
+                                <Input
+                                  type="number"
+                                  value={taux}
+                                  onChange={(ev) => {
+                                    const v = Number(ev.target.value) || 0;
+                                    setChargesFixesEdit((p) => ({
+                                      ...p,
+                                      [r.id]: { montant: p[r.id]?.montant ?? r.montant, taux: v },
+                                    }));
+                                  }}
+                                  className="h-8 text-right tabular-nums"
+                                />
+                                <div className="text-right text-sm tabular-nums text-foreground">{fmtEUR(impute)}</div>
+                                <div className="text-right text-xs text-muted-foreground">{poleLabel}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Cartes métriques */}
         {anneBlanche ? (
           <section className="grid grid-cols-1 gap-4">
