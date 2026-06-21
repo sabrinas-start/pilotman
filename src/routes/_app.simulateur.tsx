@@ -1404,6 +1404,8 @@ function SimulateurPage() {
                 />
               </div>
             </ComparisonCard>
+          </section>
+        )}
       </div>
     </div>
   );
