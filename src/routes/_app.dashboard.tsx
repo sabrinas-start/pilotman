@@ -685,8 +685,8 @@ function PoleCard({
           <p className="text-xs uppercase tracking-wide" style={{ color }}>
             {label}
           </p>
-          <p className={cn("mt-2 text-2xl font-semibold", signClass(enveloppe))}>
-            {fmtEUR(enveloppe)}
+          <p className={cn("mt-2 text-2xl font-semibold", signClass(solde))}>
+            {fmtEUR(solde)}
           </p>
           <ul className="mt-4 space-y-1.5 text-sm">
             <li className="flex items-center justify-between">
@@ -726,6 +726,13 @@ function PoleCard({
               </ul>
             </CollapsibleContent>
           </Collapsible>
+          <div className="mt-4 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+            <p className="text-xs text-muted-foreground">Enveloppe disponible</p>
+            <p className={cn("mt-0.5 text-lg font-medium tabular-nums", signClass(enveloppe))}>
+              {fmtEUR(enveloppe)}
+            </p>
+          </div>
+
         </>
       )}
     </div>
