@@ -951,13 +951,15 @@ function EditMoisModal({
 }) {
   const [cte, setCte] = useState(String(ligne.cte_mensuel));
   const [taux, setTaux] = useState((ligne.taux_imputation * 100).toFixed(1));
+  const [prime, setPrime] = useState(String(ligne.montant_prime));
   const [loading, setLoading] = useState(false);
 
   const cteNum = parseFloat(cte) || 0;
   const txNum = parseFloat(taux) || 0; // entré en %
   const txDec = txNum / 100;
   const fonpeps = ligne.fonpeps_mensuel;
-  const montantImpute = (cteNum - fonpeps) * txDec;
+  const primeNum = parseFloat(prime) || 0;
+  const montantImpute = (cteNum - fonpeps + primeNum) * txDec;
 
   const submit = async () => {
     setLoading(true);
@@ -966,6 +968,7 @@ function EditMoisModal({
         cte_mensuel: cteNum,
         taux_imputation: txDec,
         montant_impute: montantImpute,
+        montant_prime: primeNum,
       });
       // Recalcul du cte_annuel à partir de toutes les lignes mensuelles
       await recomputeCteAnnuel(salarieId, salarieNom);
