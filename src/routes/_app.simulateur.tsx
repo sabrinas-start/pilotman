@@ -134,15 +134,25 @@ function calculerKpis(p: KpisParams) {
 
   // Projection
   const restantA = p.saisonAudio.slice(p.moisCourant).reduce((s, v) => s + v / 100, 0);
-  const projAudio = p.caReelAudio + p.caObjAudio * restantA;
+  const projAudio = p.anneBlanche
+    ? p.caObjAudio
+    : p.caReelAudio + p.caObjAudio * restantA;
   const restantV = p.saisonVideo.slice(p.moisCourant).reduce((s, v) => s + v / 100, 0);
-  const projVideo = p.caReelVideo + p.caObjVideo * restantV;
+  const projVideo = p.anneBlanche
+    ? p.caObjVideo
+    : p.caReelVideo + p.caObjVideo * restantV;
   const projTotal = projAudio + projVideo;
 
   // Enveloppes
-  const resT = p.caReelTotal - p.chargesTotal;
-  const resA = p.caReelAudio - p.chargesAudioTotal;
-  const resV = p.caReelVideo - p.chargesVideoTotal;
+  const resT = p.anneBlanche
+    ? caObjGlobal - p.chargesTotal
+    : p.caReelTotal - p.chargesTotal;
+  const resA = p.anneBlanche
+    ? p.caObjAudio - p.chargesAudioTotal
+    : p.caReelAudio - p.chargesAudioTotal;
+  const resV = p.anneBlanche
+    ? p.caObjVideo - p.chargesVideoTotal
+    : p.caReelVideo - p.chargesVideoTotal;
   const sommeAV = resA + resV;
   const partAudio = sommeAV > 0 ? Math.min(resA / sommeAV, 1) : 0.5;
   const partVideo = sommeAV > 0 ? Math.min(resV / sommeAV, 1) : 0.5;
