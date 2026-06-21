@@ -5,6 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { useAuth } from "@/contexts/AuthContext";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Tableau de bord — Pôle Tournage" }] }),
@@ -621,70 +623,78 @@ function CapaciteCard({
           <div className="text-base font-semibold text-foreground">{pctLabel}</div>
         </div>
       </div>
-      <hr className="my-4 border-border" />
-      <div className="grid grid-cols-1 gap-0 md:grid-cols-3">
-        {/* Colonne 1 — Surplus */}
-        <div className="px-4">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            1 · Surplus
-          </p>
-          <CalcLine op="" label="CA réel YTD" value={fmtEUR(caTotal)} />
-          <CalcLine op="−" label="Objectif YTD" value={fmtEUR(caObjectifYTD)} />
-          <CalcLine op="=" label="Surplus" value={fmtEUR(surplus)} semantic={surplus} />
-          <p className="mt-2 px-2 text-xs italic text-muted-foreground">
-            {surplus >= 0
-              ? `Surplus × ${pctLabel} = surplus pondéré ${fmtEUR(surplusPondere)}`
-              : `Surplus < 0 · pas de pondération`}
-          </p>
-        </div>
-
-        {/* Colonne 2 — Résultat pondéré */}
-        <div className="border-l border-border px-4">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            2 · Résultat pondéré
-          </p>
-          {surplus >= 0 ? (
-            <>
-              <CalcLine op="" label="Objectif YTD" value={fmtEUR(caObjectifYTD)} />
-              <CalcLine op="+" label="Surplus pondéré" value={fmtEUR(surplusPondere)} />
-              <CalcLine op="=" label="CA pondéré" value={fmtEUR(caPondere)} />
-              <CalcLine op="−" label="Charges YTD" value={fmtEUR(chargesYTD)} />
-              <CalcLine op="=" label="Résultat" value={fmtEUR(resPondere)} semantic={resPondere} />
-            </>
-          ) : (
-            <>
+      <Collapsible>
+        <CollapsibleTrigger className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground [&[data-state=open]>svg]:rotate-180">
+          <ChevronDown className="h-3.5 w-3.5 transition-transform" />
+          Voir le détail du calcul
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <hr className="my-4 border-border" />
+          <div className="grid grid-cols-1 gap-0 md:grid-cols-3">
+            {/* Colonne 1 — Surplus */}
+            <div className="px-4">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                1 · Surplus
+              </p>
               <CalcLine op="" label="CA réel YTD" value={fmtEUR(caTotal)} />
-              <CalcLine op="−" label="Charges YTD" value={fmtEUR(chargesYTD)} />
-              <CalcLine op="=" label="Résultat" value={fmtEUR(resPondere)} semantic={resPondere} />
-            </>
-          )}
-          {resPondere < 0 && (
-            <p className="mt-2 px-2 text-xs italic text-muted-foreground">
-              Résultat &lt; 0 · réserve non appliquée
-            </p>
-          )}
-        </div>
+              <CalcLine op="−" label="Objectif YTD" value={fmtEUR(caObjectifYTD)} />
+              <CalcLine op="=" label="Surplus" value={fmtEUR(surplus)} semantic={surplus} />
+              <p className="mt-2 px-2 text-xs italic text-muted-foreground">
+                {surplus >= 0
+                  ? `Surplus × ${pctLabel} = surplus pondéré ${fmtEUR(surplusPondere)}`
+                  : `Surplus < 0 · pas de pondération`}
+              </p>
+            </div>
 
-        {/* Colonne 3 — Capacité */}
-        <div className="border-l border-border px-4">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            3 · Capacité
-          </p>
-          <CalcLine op="" label="Résultat pondéré" value={fmtEUR(resPondere)} />
-          <CalcLine
-            op="−"
-            label={`Réserve (${reservePctLabel})`}
-            value={resPondere > 0 ? fmtEUR(montantReserve) : "N/A"}
-          />
-          <CalcLine
-            op="="
-            label="Capacité"
-            value={fmtEUR(indicateur2)}
-            semantic={indicateur2}
-            bold
-          />
-        </div>
-      </div>
+            {/* Colonne 2 — Résultat pondéré */}
+            <div className="border-l border-border px-4">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                2 · Résultat pondéré
+              </p>
+              {surplus >= 0 ? (
+                <>
+                  <CalcLine op="" label="Objectif YTD" value={fmtEUR(caObjectifYTD)} />
+                  <CalcLine op="+" label="Surplus pondéré" value={fmtEUR(surplusPondere)} />
+                  <CalcLine op="=" label="CA pondéré" value={fmtEUR(caPondere)} />
+                  <CalcLine op="−" label="Charges YTD" value={fmtEUR(chargesYTD)} />
+                  <CalcLine op="=" label="Résultat" value={fmtEUR(resPondere)} semantic={resPondere} />
+                </>
+              ) : (
+                <>
+                  <CalcLine op="" label="CA réel YTD" value={fmtEUR(caTotal)} />
+                  <CalcLine op="−" label="Charges YTD" value={fmtEUR(chargesYTD)} />
+                  <CalcLine op="=" label="Résultat" value={fmtEUR(resPondere)} semantic={resPondere} />
+                </>
+              )}
+              {resPondere < 0 && (
+                <p className="mt-2 px-2 text-xs italic text-muted-foreground">
+                  Résultat &lt; 0 · réserve non appliquée
+                </p>
+              )}
+            </div>
+
+            {/* Colonne 3 — Capacité */}
+            <div className="border-l border-border px-4">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                3 · Capacité
+              </p>
+              <CalcLine op="" label="Résultat pondéré" value={fmtEUR(resPondere)} />
+              <CalcLine
+                op="−"
+                label={`Réserve (${reservePctLabel})`}
+                value={resPondere > 0 ? fmtEUR(montantReserve) : "N/A"}
+              />
+              <CalcLine
+                op="="
+                label="Capacité"
+                value={fmtEUR(indicateur2)}
+                semantic={indicateur2}
+                bold
+              />
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </>
   );
 }
