@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Check } from "lucide-react";
 import { useAirtable } from "@/hooks/useAirtable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -763,6 +763,7 @@ function EditSalarieModal({
   const [loadingFin, setLoadingFin] = useState(false);
   const [nom, setNom] = useState(salarie.nom);
   const [loadingNom, setLoadingNom] = useState(false);
+  const [editingNom, setEditingNom] = useState(false);
 
   const submitNom = async () => {
     const newNom = nom.trim();
@@ -851,15 +852,48 @@ function EditSalarieModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span>Mettre à jour —</span>
-            <Input
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              className="h-8 w-auto max-w-[200px] text-base font-semibold"
-            />
-            {nom.trim() !== salarie.nom && nom.trim() !== "" && (
-              <Button size="sm" onClick={submitNom} disabled={loadingNom}>
-                {loadingNom ? "…" : "Renommer"}
-              </Button>
+            {editingNom ? (
+              <>
+                <Input
+                  value={nom}
+                  onChange={(e) => setNom(e.target.value)}
+                  className="h-8 w-auto max-w-[200px] text-base font-semibold"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    await submitNom();
+                    setEditingNom(false);
+                  }}
+                  disabled={loadingNom || nom.trim() === salarie.nom || nom.trim() === ""}
+                >
+                  {loadingNom ? "…" : <Check className="h-4 w-4" />}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setNom(salarie.nom);
+                    setEditingNom(false);
+                  }}
+                  disabled={loadingNom}
+                >
+                  Annuler
+                </Button>
+              </>
+            ) : (
+              <>
+                <span>{salarie.nom}</span>
+                <button
+                  type="button"
+                  onClick={() => setEditingNom(true)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Renommer"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </>
             )}
           </DialogTitle>
         </DialogHeader>
