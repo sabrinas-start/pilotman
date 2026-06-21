@@ -118,10 +118,12 @@ export function DashboardCharts({
 
     let cumulReel = 0;
     let cumulCharges = 0;
+    const realPoints: { revenus: number; charges: number }[] = [];
 
     for (let i = 0; i <= moisCourantIdx; i++) {
       cumulReel += reelByMonth[i];
       cumulCharges += chargesByMonth[i];
+      realPoints.push({ revenus: cumulReel, charges: cumulCharges });
     }
 
     const annuel = num(objectifs.ca_objectif_global);
@@ -142,14 +144,15 @@ export function DashboardCharts({
         cumulRevProj += objScope * part;
         cumulChargesProj += chargesParMoisMoyen;
       }
+      const real = i <= moisCourantIdx ? realPoints[i] : null;
       return {
         mois: label,
-        revenus: i <= moisCourantIdx ? cumulReel : null,
-        charges: i <= moisCourantIdx ? cumulCharges : null,
-        solde: i <= moisCourantIdx ? cumulReel - cumulCharges : null,
-        revenusProj: i >= moisCourantIdx ? cumulRevProj : null,
-        chargesProj: i >= moisCourantIdx ? cumulChargesProj : null,
-        soldeProj: i >= moisCourantIdx ? cumulRevProj - cumulChargesProj : null,
+        revenus: real ? real.revenus : null,
+        charges: real ? real.charges : null,
+        solde: real ? real.revenus - real.charges : null,
+        revenusProj: i >= moisCourantIdx ? (i === moisCourantIdx ? cumulReel : cumulRevProj) : null,
+        chargesProj: i >= moisCourantIdx ? (i === moisCourantIdx ? cumulCharges : cumulChargesProj) : null,
+        soldeProj: i >= moisCourantIdx ? (i === moisCourantIdx ? cumulReel - cumulCharges : cumulRevProj - cumulChargesProj) : null,
       };
     });
   }, [revenus, chargesReelles, scope, pctAudio, pctVideo, moisCourantIdx, objectifs]);
