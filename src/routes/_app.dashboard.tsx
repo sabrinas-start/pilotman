@@ -454,8 +454,8 @@ function DashboardPage() {
       {/* BLOC 3 — Projection */}
       {!isPoleOnly && (
         <section>
-          <BaseCard loading={loading} label="Projection fin d'année">
-            <p className="text-3xl font-semibold text-foreground">{fmtEUR(caProjecte)}</p>
+          <BaseCard loading={loading} label={projectionTitle}>
+            <p className="text-3xl font-semibold text-foreground">{fmtEUR(selectedVar.caProjecte)}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               CA réel YTD + objectifs mois restants
             </p>
@@ -463,45 +463,45 @@ function DashboardPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Objectif annuel</p>
                 <p className="mt-1 text-base font-medium tabular-nums text-foreground">
-                  {fmtEUR(caObjectifGlobal)}
+                  {fmtEUR(selectedVar.caObjectif)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Écart projeté</p>
-                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(ecartProjecte))}>
-                  {fmtEUR(ecartProjecte)}
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(selectedVar.ecartProjecte))}>
+                  {fmtEUR(selectedVar.ecartProjecte)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">% réalisation projeté</p>
-                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(pctRealisationAnnuelProjecte - 1))}>
-                  {(pctRealisationAnnuelProjecte * 100).toFixed(0)}%
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(selectedVar.pctRealisationAnnuelProjecte - 1))}>
+                  {(selectedVar.pctRealisationAnnuelProjecte * 100).toFixed(0)}%
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Pipe attendu</p>
                 <p className="mt-1 text-base font-medium tabular-nums" style={{ color: C_ACCENT }}>
-                  {fmtEUR(pipeRetenuTotal)}
+                  {fmtEUR(selectedVar.pipeRetenu)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Charges projetées</p>
                 <p className="mt-1 text-base font-medium tabular-nums text-foreground">
-                  {fmtEUR(chargesProjeteesAnnuelles)}
+                  {fmtEUR(selectedVar.chargesProjeteesAnnuelles)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Solde projeté annuel</p>
-                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(soldeProjeteAnnuel))}>
-                  {fmtEUR(soldeProjeteAnnuel)}
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(selectedVar.soldeProjeteAnnuel))}>
+                  {fmtEUR(selectedVar.soldeProjeteAnnuel)}
                 </p>
               </div>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">
               Position saisonnière :{" "}
-              <span className={signClass(ecartPosition)}>
-                {ecartPosition * 100 >= 0 ? "+" : ""}
-                {(ecartPosition * 100).toFixed(0)}% vs rythme de l'année
+              <span className={signClass(selectedVar.ecartPosition)}>
+                {selectedVar.ecartPosition * 100 >= 0 ? "+" : ""}
+                {(selectedVar.ecartPosition * 100).toFixed(0)}% vs rythme de l'année
               </span>
             </p>
             <Collapsible>
@@ -511,8 +511,8 @@ function DashboardPage() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <ul className="mt-3 space-y-1.5 text-sm">
-                  <DetailRow label="CA réel YTD" value={fmtEUR(caTotal)} />
-                  <DetailRow label="+ Objectifs mois restants" value={fmtEUR(objectifsMoisRestants)} />
+                  <DetailRow label="CA réel YTD" value={fmtEUR(selectedVar.caTotal)} />
+                  <DetailRow label="+ Objectifs mois restants" value={fmtEUR(selectedVar.caObjectif - selectedVar.caObjectifYTD)} />
                 </ul>
               </CollapsibleContent>
             </Collapsible>
