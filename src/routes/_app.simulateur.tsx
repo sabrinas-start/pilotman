@@ -404,13 +404,16 @@ function SimulateurPage() {
   const chReelAudioEff = anneBlanche ? 0 : real.chargesAudio + real.chargesCommunes * pAudio;
   const chReelVideoEff = anneBlanche ? 0 : real.chargesVideo + real.chargesCommunes * pVideo;
 
-  // Provisions (filtre mois si normal, sinon toutes)
-  const chProv = useMemo(() => {
-    const filtered = anneBlanche
-      ? chargesProv
-      : chargesProv.filter((r) => num(r.fields.mois) <= real.moisCourant);
-    return filtered.reduce((s, r) => s + num(r.fields.montant_provisionne), 0);
-  }, [chargesProv, anneBlanche, real.moisCourant]);
+  // Provisions — source : tableau "Charges fixes par catégorie" (édité ou Airtable)
+  const chProvAnnuel = useMemo(() => {
+    return chargesFixesBase.reduce((s, r) => {
+      const e = chargesFixesEdit[r.id];
+      const montant = e?.montant ?? r.montant;
+      const taux = e?.taux ?? r.taux;
+      return s + montant * (taux / 100);
+    }, 0);
+  }, [chargesFixesBase, chargesFixesEdit]);
+  const chProv = anneBlanche ? chProvAnnuel : chProvAnnuel * (real.moisCourant / 12);
 
   // Salaires
   const sumSal = useMemo(() => {
