@@ -772,7 +772,7 @@ function SimulateurPage() {
         </div>
 
         {/* Charges fixes par catégorie */}
-        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820" }}>
+        <div className="rounded-lg border border-border p-4" style={{ backgroundColor: "#181820", borderLeft: "4px solid #D85A30", borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
