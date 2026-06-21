@@ -335,29 +335,44 @@ function SimulateurPage() {
     taux: number; // en %
   };
   const chargesFixesBase = useMemo<FixeRow[]>(() => {
-    const refs = refCategoriesQ.data ?? [];
-    const sommeParCle = new Map<string, number>();
+    const groupes = new Map<
+      string,
+      { categorie: string; type_charge: string; somme: number; firstId: string }
+    >();
     for (const r of chargesProv) {
-      const cat = str(r.fields.categorie);
-      const typ = str(r.fields.type_charge);
-      const cle = cat || typ;
-      if (!cle) continue;
-      sommeParCle.set(cle, (sommeParCle.get(cle) ?? 0) + num(r.fields.montant_provisionne));
-    }
-    return refs.map((r) => {
       const categorie = str(r.fields.categorie);
       const type_charge = str(r.fields.type_charge);
-      const tauxRaw = num(r.fields.taux_imputation_defaut);
-      const taux = tauxRaw <= 1 ? tauxRaw * 100 : tauxRaw;
       const cle = categorie || type_charge;
-      const montant = sommeParCle.get(cle) ?? 0;
+      if (!cle) continue;
+      const existing = groupes.get(cle);
+      if (existing) {
+        existing.somme += num(r.fields.montant_provisionne);
+      } else {
+        groupes.set(cle, {
+          categorie,
+          type_charge,
+          somme: num(r.fields.montant_provisionne),
+          firstId: r.id,
+        });
+      }
+    }
+    return Array.from(groupes.entries()).map(([cle, g]) => {
+      const montant = Math.round(g.somme * 100) / 100;
       const pole: "audio" | "video" | "global" =
-        categorie.includes("Tournage Son") ? "audio"
-          : categorie.includes("Tournage Image") ? "video"
+        g.categorie.includes("Tournage Son") ? "audio"
+          : g.categorie.includes("Tournage Image") ? "video"
           : "global";
-      return { id: r.id, categorie, type_charge, pole, montant, taux };
+      return {
+        id: g.firstId || cle,
+        categorie: g.categorie || g.type_charge,
+        type_charge: g.type_charge,
+        pole,
+        montant,
+        taux: 100,
+      };
     });
-  }, [refCategoriesQ.data, chargesProv]);
+  }, [chargesProv]);
+
 
   const chargesFixesGroupes = useMemo(() => {
     const m = new Map<string, FixeRow[]>();
