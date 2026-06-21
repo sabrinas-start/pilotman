@@ -1351,15 +1351,59 @@ function SimulateurPage() {
               reel={kpisBaseline.enveloppeAudio}
               simule={kpisSimule.enveloppeAudio}
               pole="audio"
-            />
+            >
+              <div className="mt-3 border-t border-border pt-2">
+                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <span></span>
+                  <span className="w-24 text-right">Réel</span>
+                  <span className="w-24 text-right" style={{ color: C_ACCENT }}>Simulé</span>
+                </div>
+                <CompareRow
+                  label="dont charges réelles"
+                  reel={baselineBreakdown.chargesReellesAudioBase}
+                  simule={chReelAudioEff}
+                />
+                <CompareRow
+                  label="dont provisions"
+                  reel={baselineBreakdown.chargesProvAudioBase}
+                  simule={chProv * pAudio}
+                />
+                <CompareRow
+                  label="dont salaires"
+                  reel={baselineBreakdown.chargesSalAudioBase}
+                  simule={sumSal * pAudio}
+                />
+              </div>
+            </ComparisonCard>
             <ComparisonCard
               title="🎬 Enveloppe Vidéo"
               reel={kpisBaseline.enveloppeVideo}
               simule={kpisSimule.enveloppeVideo}
               pole="video"
-            />
-          </section>
-        )}
+            >
+              <div className="mt-3 border-t border-border pt-2">
+                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <span></span>
+                  <span className="w-24 text-right">Réel</span>
+                  <span className="w-24 text-right" style={{ color: C_ACCENT }}>Simulé</span>
+                </div>
+                <CompareRow
+                  label="dont charges réelles"
+                  reel={baselineBreakdown.chargesReellesVideoBase}
+                  simule={chReelVideoEff}
+                />
+                <CompareRow
+                  label="dont provisions"
+                  reel={baselineBreakdown.chargesProvVideoBase}
+                  simule={chProv * pVideo}
+                />
+                <CompareRow
+                  label="dont salaires"
+                  reel={baselineBreakdown.chargesSalVideoBase}
+                  simule={sumSal * pVideo}
+                />
+              </div>
+            </ComparisonCard>
       </div>
     </div>
   );
