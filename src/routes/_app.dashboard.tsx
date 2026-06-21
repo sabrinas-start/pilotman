@@ -41,7 +41,8 @@ function DashboardPage() {
   const isPoleOnly = profil === "audio" || profil === "video";
   const moisCourant = new Date().getMonth() + 1;
   const [graphScope, setGraphScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
-  const [cardsScope, setCardsScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
+  const [capaciteScope, setCapaciteScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
+  const [projectionScope, setProjectionScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
 
   const metriquesQ = useAirtable("tblNznOYtuFDUI3df", {
     maxRecords: 1,
@@ -299,15 +300,17 @@ function DashboardPage() {
     caObjectif: caObjectifGlobal,
   };
 
-  const selectedVar =
-    cardsScope === "Audio" ? audioVar : cardsScope === "Vidéo" ? videoVar : globalVar;
-  const scopeSuffix =
-    cardsScope === "Audio" ? "Audio" : cardsScope === "Vidéo" ? "Vidéo" : "globale";
-  const capaciteTitle = `💡 Enveloppe ${scopeSuffix} · Capacité d'investissement`;
+  const pickVar = (s: "Global" | "Audio" | "Vidéo") =>
+    s === "Audio" ? audioVar : s === "Vidéo" ? videoVar : globalVar;
+  const capaciteVar = pickVar(capaciteScope);
+  const projectionVar = pickVar(projectionScope);
+  const capaciteSuffix =
+    capaciteScope === "Audio" ? "Audio" : capaciteScope === "Vidéo" ? "Vidéo" : "globale";
+  const capaciteTitle = `💡 Enveloppe ${capaciteSuffix} · Capacité d'investissement`;
   const projectionTitle =
-    cardsScope === "Global"
+    projectionScope === "Global"
       ? "Projection fin d'année"
-      : `Projection fin d'année · ${cardsScope}`;
+      : `Projection fin d'année · ${projectionScope}`;
 
   const dateSnapshot = str(metriques.date_snapshot) || "—";
 
@@ -415,10 +418,10 @@ function DashboardPage() {
               <button
                 key={s}
                 type="button"
-                onClick={() => setCardsScope(s)}
+                onClick={() => setCapaciteScope(s)}
                 className={cn(
                   "rounded border px-2 py-0.5 text-[11px] transition-colors",
-                  cardsScope === s
+                  capaciteScope === s
                     ? "border-border bg-muted text-foreground"
                     : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
                 )}
@@ -434,17 +437,17 @@ function DashboardPage() {
           ) : (
             <CapaciteCard
               title={capaciteTitle}
-              caTotal={selectedVar.caTotal}
-              caObjectifYTD={selectedVar.caObjectifYTD}
-              surplus={selectedVar.surplus}
-              surplusPondere={selectedVar.surplusPondere}
+              caTotal={capaciteVar.caTotal}
+              caObjectifYTD={capaciteVar.caObjectifYTD}
+              surplus={capaciteVar.surplus}
+              surplusPondere={capaciteVar.surplusPondere}
               pctAnneeEcoulee={pctAnneeEcoulee}
-              caPondere={selectedVar.caPondere}
-              chargesYTD={selectedVar.chargesYTD}
-              resPondere={selectedVar.resPondere}
+              caPondere={capaciteVar.caPondere}
+              chargesYTD={capaciteVar.chargesYTD}
+              resPondere={capaciteVar.resPondere}
               reserve={reserve}
-              montantReserve={selectedVar.montantReserve}
-              indicateur2={selectedVar.indicateur2}
+              montantReserve={capaciteVar.montantReserve}
+              indicateur2={capaciteVar.indicateur2}
             />
           )}
         </div>
@@ -453,9 +456,28 @@ function DashboardPage() {
 
       {/* BLOC 3 — Projection */}
       {!isPoleOnly && (
-        <section>
+        <section className="space-y-2">
+          <div className="flex justify-end">
+            <div className="flex gap-1">
+              {(["Global", "Audio", "Vidéo"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setProjectionScope(s)}
+                  className={cn(
+                    "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                    projectionScope === s
+                      ? "border-border bg-muted text-foreground"
+                      : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
           <BaseCard loading={loading} label={projectionTitle}>
-            <p className="text-3xl font-semibold text-foreground">{fmtEUR(selectedVar.caProjecte)}</p>
+            <p className="text-3xl font-semibold text-foreground">{fmtEUR(projectionVar.caProjecte)}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               CA réel YTD + objectifs mois restants
             </p>
@@ -463,45 +485,45 @@ function DashboardPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Objectif annuel</p>
                 <p className="mt-1 text-base font-medium tabular-nums text-foreground">
-                  {fmtEUR(selectedVar.caObjectif)}
+                  {fmtEUR(projectionVar.caObjectif)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Écart projeté</p>
-                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(selectedVar.ecartProjecte))}>
-                  {fmtEUR(selectedVar.ecartProjecte)}
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(projectionVar.ecartProjecte))}>
+                  {fmtEUR(projectionVar.ecartProjecte)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">% réalisation projeté</p>
-                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(selectedVar.pctRealisationAnnuelProjecte - 1))}>
-                  {(selectedVar.pctRealisationAnnuelProjecte * 100).toFixed(0)}%
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(projectionVar.pctRealisationAnnuelProjecte - 1))}>
+                  {(projectionVar.pctRealisationAnnuelProjecte * 100).toFixed(0)}%
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Pipe attendu</p>
                 <p className="mt-1 text-base font-medium tabular-nums" style={{ color: C_ACCENT }}>
-                  {fmtEUR(selectedVar.pipeRetenu)}
+                  {fmtEUR(projectionVar.pipeRetenu)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Charges projetées</p>
                 <p className="mt-1 text-base font-medium tabular-nums text-foreground">
-                  {fmtEUR(selectedVar.chargesProjeteesAnnuelles)}
+                  {fmtEUR(projectionVar.chargesProjeteesAnnuelles)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Solde projeté annuel</p>
-                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(selectedVar.soldeProjeteAnnuel))}>
-                  {fmtEUR(selectedVar.soldeProjeteAnnuel)}
+                <p className={cn("mt-1 text-base font-medium tabular-nums", signClass(projectionVar.soldeProjeteAnnuel))}>
+                  {fmtEUR(projectionVar.soldeProjeteAnnuel)}
                 </p>
               </div>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">
               Position saisonnière :{" "}
-              <span className={signClass(selectedVar.ecartPosition)}>
-                {selectedVar.ecartPosition * 100 >= 0 ? "+" : ""}
-                {(selectedVar.ecartPosition * 100).toFixed(0)}% vs rythme de l'année
+              <span className={signClass(projectionVar.ecartPosition)}>
+                {projectionVar.ecartPosition * 100 >= 0 ? "+" : ""}
+                {(projectionVar.ecartPosition * 100).toFixed(0)}% vs rythme de l'année
               </span>
             </p>
             <Collapsible>
@@ -511,8 +533,8 @@ function DashboardPage() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <ul className="mt-3 space-y-1.5 text-sm">
-                  <DetailRow label="CA réel YTD" value={fmtEUR(selectedVar.caTotal)} />
-                  <DetailRow label="+ Objectifs mois restants" value={fmtEUR(selectedVar.caObjectif - selectedVar.caObjectifYTD)} />
+                  <DetailRow label="CA réel YTD" value={fmtEUR(projectionVar.caTotal)} />
+                  <DetailRow label="+ Objectifs mois restants" value={fmtEUR(projectionVar.caObjectif - projectionVar.caObjectifYTD)} />
                 </ul>
               </CollapsibleContent>
             </Collapsible>
