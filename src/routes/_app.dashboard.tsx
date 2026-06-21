@@ -418,10 +418,10 @@ function DashboardPage() {
               <button
                 key={s}
                 type="button"
-                onClick={() => setCardsScope(s)}
+                onClick={() => setCapaciteScope(s)}
                 className={cn(
                   "rounded border px-2 py-0.5 text-[11px] transition-colors",
-                  cardsScope === s
+                  capaciteScope === s
                     ? "border-border bg-muted text-foreground"
                     : "border-border/40 bg-transparent text-muted-foreground hover:text-foreground",
                 )}
