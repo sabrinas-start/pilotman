@@ -681,41 +681,74 @@ function EditSalarieModal({
   const [cte, setCte] = useState(String(salarie.cte_annuel));
   const [fonpeps, setFonpeps] = useState(String(salarie.fonpeps_annuel));
   const [taux, setTaux] = useState((salarie.taux_imputation * 100).toFixed(1));
-  const [dateEffet, setDateEffet] = useState("");
+  const [dateEffetTaux, setDateEffetTaux] = useState("");
   const [dateFin, setDateFin] = useState(salarie.date_fin ? salarie.date_fin.slice(0, 7) : "");
-  const [loading, setLoading] = useState(false);
+  const [loadingTaux, setLoadingTaux] = useState(false);
+  const [loadingFin, setLoadingFin] = useState(false);
 
-  const submit = async () => {
-    if (!dateEffet) {
+  const submitTaux = async () => {
+    if (!dateEffetTaux) {
       toast.error("Date d'effet requise");
       return;
     }
-    setLoading(true);
+    setLoadingTaux(true);
     try {
-      const fields: Record<string, unknown> = {
+      await airtablePatch(SALARIES_TABLE, salarie.id, {
         cte_annuel: parseFloat(cte) || 0,
         fonpeps_annuel: parseFloat(fonpeps) || 0,
         taux_imputation: (parseFloat(taux) || 0) / 100,
-      };
-      if (dateFin) fields.date_fin_charge = `${dateFin}-01`;
-      await airtablePatch(SALARIES_TABLE, salarie.id, fields);
+      });
+      const res = await fetch(WEBHOOK_GENERATION, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          salarie_record_id: salarie.id,
+          date_effet: `${dateEffetTaux}-01`,
+          date_fin_charge: salarie.date_fin || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Webhook generation failed");
+      toast.success("Taux mis à jour ✓");
+      onDone();
+    } catch (e) {
+      toast.error("Erreur mise à jour", { description: String(e) });
+    } finally {
+      setLoadingTaux(false);
+    }
+  };
+
+  const submitFin = async () => {
+    if (!dateFin) {
+      toast.error("Date de fin requise");
+      return;
+    }
+    setLoadingFin(true);
+    try {
+      await airtablePatch(SALARIES_TABLE, salarie.id, { date_fin_charge: `${dateFin}-01` });
+
+      const [y, m] = dateFin.split("-").map(Number);
+      const nextMonth = m === 12 ? 1 : m + 1;
+      const nextYear = m === 12 ? y + 1 : y;
+      const effetWebhook = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
 
       const res = await fetch(WEBHOOK_GENERATION, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           salarie_record_id: salarie.id,
-          date_effet: `${dateEffet}-01`,
-          date_fin_charge: dateFin ? `${dateFin}-01` : null,
+          date_effet: effetWebhook,
+          date_fin_charge: `${dateFin}-01`,
         }),
       });
       if (!res.ok) throw new Error("Webhook generation failed");
-      toast.success("Mis à jour ✓");
+
+      await recomputeCteAnnuel(salarie.id, salarie.nom);
+      toast.success("Contrat clôturé ✓");
       onDone();
     } catch (e) {
       toast.error("Erreur mise à jour", { description: String(e) });
     } finally {
-      setLoading(false);
+      setLoadingFin(false);
     }
   };
 
@@ -725,26 +758,50 @@ function EditSalarieModal({
         <DialogHeader>
           <DialogTitle>Mettre à jour — {salarie.nom}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <Field label="CTE annuel (€)">
-            <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} onWheel={blurOnWheel} />
-          </Field>
-          <Field label="FONPEPS annuel (€)">
-            <Input type="number" value={fonpeps} onChange={(e) => setFonpeps(e.target.value)} onWheel={blurOnWheel} />
-          </Field>
-          <Field label="% imputation">
-            <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
-          </Field>
-          <Field label="Date d'effet">
-            <Input type="month" value={dateEffet} onChange={(e) => setDateEffet(e.target.value)} />
-          </Field>
-          <Field label="Date de fin (optionnel)">
-            <Input type="month" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
-          </Field>
+
+        <div className="space-y-6">
+          <div className="rounded-lg border border-border p-4 space-y-4">
+            <h4 className="text-sm font-semibold text-foreground">Taux & rémunération</h4>
+            <Field label="CTE annuel (€)">
+              <Input type="number" value={cte} onChange={(e) => setCte(e.target.value)} onWheel={blurOnWheel} />
+            </Field>
+            <Field label="FONPEPS annuel (€)">
+              <Input type="number" value={fonpeps} onChange={(e) => setFonpeps(e.target.value)} onWheel={blurOnWheel} />
+            </Field>
+            <Field label="% imputation">
+              <Input type="number" value={taux} onChange={(e) => setTaux(e.target.value)} onWheel={blurOnWheel} />
+            </Field>
+            <Field label="Date d'effet">
+              <Input type="month" value={dateEffetTaux} onChange={(e) => setDateEffetTaux(e.target.value)} />
+            </Field>
+            <p className="text-xs text-muted-foreground">
+              Recalcule uniquement les mois à partir de cette date. Les mois précédents ne sont jamais modifiés.
+            </p>
+            <div className="flex justify-end">
+              <Button onClick={submitTaux} disabled={loadingTaux}>
+                {loadingTaux ? "Mise à jour…" : "Enregistrer le taux"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border p-4 space-y-4">
+            <h4 className="text-sm font-semibold text-foreground">Fin de contrat</h4>
+            <Field label="Date de fin">
+              <Input type="month" value={dateFin} onChange={(e) => setDateFin(e.target.value)} />
+            </Field>
+            <p className="text-xs text-muted-foreground">
+              Supprime les mois après cette date et réajuste le CTE annuel sur la somme réelle des mois conservés. Les mois passés ne sont jamais modifiés.
+            </p>
+            <div className="flex justify-end">
+              <Button onClick={submitFin} disabled={loadingFin}>
+                {loadingFin ? "Clôture…" : "Clôturer le contrat"}
+              </Button>
+            </div>
+          </div>
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={loading}>Annuler</Button>
-          <Button onClick={submit} disabled={loading}>{loading ? "Mise à jour…" : "Enregistrer"}</Button>
+          <Button variant="outline" onClick={onClose}>Fermer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
