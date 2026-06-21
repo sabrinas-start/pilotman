@@ -770,11 +770,28 @@ function EditSalarieModal({
     if (!newNom || newNom === salarie.nom) return;
     setLoadingNom(true);
     try {
+      const url = `/api/airtable?tableId=${SALARIES_MOIS_TABLE}&filterByFormula=${encodeURIComponent(
+        `AND({nom_salarie}="${salarie.nom}", {annee}=${ANNEE})`,
+      )}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(await res.text());
+      const json = (await res.json()) as { records: Array<{ id: string; fields: Record<string, unknown> }> };
+
+      for (const r of json.records) {
+        const mois = num(r.fields.mois);
+        await airtablePatch(SALARIES_MOIS_TABLE, r.id, {
+          nom_salarie: newNom,
+          cle_primaire: `${newNom}_${mois}_${ANNEE}`,
+        });
+      }
+
       await airtablePatch(SALARIES_TABLE, salarie.id, { nom_salarie: newNom });
-      toast.success("Nom mis à jour ✓");
+      toast.success(`Salarié renommé ✓ (${json.records.length} ligne${json.records.length > 1 ? "s" : ""} mensuelle${json.records.length > 1 ? "s" : ""} mise${json.records.length > 1 ? "s" : ""} à jour)`);
       onDone();
     } catch (e) {
-      toast.error("Erreur renommage", { description: String(e) });
+      toast.error("Erreur lors du renommage — vérifier manuellement les lignes mensuelles", {
+        description: String(e),
+      });
     } finally {
       setLoadingNom(false);
     }
