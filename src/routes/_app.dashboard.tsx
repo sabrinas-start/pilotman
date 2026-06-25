@@ -203,6 +203,11 @@ function DashboardPage() {
   const pipeRetenuAudio = pipeOptAudio + pipePonAudio;
   const pipeRetenuVideo = pipeOptVideo + pipePonVideo;
 
+  const enAttenteFacturationTotal = num(metriques.ca_en_attente_facturation_total);
+  const enAttenteFacturationAudio = num(metriques.ca_en_attente_facturation_audio);
+  const enAttenteFacturationVideo = num(metriques.ca_en_attente_facturation_video);
+
+
   // Avancement
   const pctRealisationYTD = caObjectifYTD > 0 ? caTotal / caObjectifYTD : 0;
   const pctCaAnnuelRealise = caObjectifGlobal > 0 ? caTotal / caObjectifGlobal : 0;
