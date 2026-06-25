@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 
 
@@ -43,6 +43,7 @@ function DashboardPage() {
   const [graphScope, setGraphScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
   const [capaciteScope, setCapaciteScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
   const [projectionScope, setProjectionScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
+  const [detailOuvert, setDetailOuvert] = useState(false);
 
   const metriquesQ = useAirtable("tblNznOYtuFDUI3df", {
     maxRecords: 1,
@@ -363,6 +364,32 @@ function DashboardPage() {
             </p>
             <ul className="mt-4 space-y-1.5 text-sm">
               <DetailRow label="CA réel YTD" value={fmtEUR(caTotal)} />
+            </ul>
+            <button
+              type="button"
+              onClick={() => setDetailOuvert((o) => !o)}
+              className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              {detailOuvert ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
+              Détail
+            </button>
+            {detailOuvert && (
+              <div className="mt-1.5 space-y-1 text-xs text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>dont Vente</span>
+                  <span>{fmtEUR(num(metriques.ca_vente_cumul))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>dont Assurance</span>
+                  <span>{fmtEUR(num(metriques.ca_assurance_cumul))}</span>
+                </div>
+              </div>
+            )}
+            <ul className="mt-3 space-y-1.5 text-sm">
               <DetailRow label="Charges YTD totales" value={fmtEUR(chargesTotalGlobal)} />
             </ul>
             <Collapsible>
