@@ -37,7 +37,6 @@ function cleReelle(r: AirtableRecord): string {
   return typeCharge;
 }
 
-
 interface Props {
   scope: "Global" | "Audio" | "Vidéo";
   revenus: AirtableRecord[];
