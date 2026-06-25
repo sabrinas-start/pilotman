@@ -119,7 +119,7 @@ function DashboardPage() {
 
   const chargesReelTotalBrut = num(metriques.charges_reel_total);
   const reelFixeNonReconciliee = chargesReelles
-    .filter((r) => r.fields.est_fixe === true && pendingProvKeys.has(str(r.fields.cle_reconciliation)))
+    .filter((r) => r.fields.est_fixe === true && !estReconciliee(r))
     .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
   const chargesReelTotal = chargesReelTotalBrut - reelFixeNonReconciliee;
   const chargesCommunes = chargesReelTotal - chargesAudio - chargesVideo;
