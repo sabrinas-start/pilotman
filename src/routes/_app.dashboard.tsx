@@ -203,6 +203,11 @@ function DashboardPage() {
   const pipeRetenuAudio = pipeOptAudio + pipePonAudio;
   const pipeRetenuVideo = pipeOptVideo + pipePonVideo;
 
+  const enAttenteFacturationTotal = num(metriques.ca_en_attente_facturation_total);
+  const enAttenteFacturationAudio = num(metriques.ca_en_attente_facturation_audio);
+  const enAttenteFacturationVideo = num(metriques.ca_en_attente_facturation_video);
+
+
   // Avancement
   const pctRealisationYTD = caObjectifYTD > 0 ? caTotal / caObjectifYTD : 0;
   const pctCaAnnuelRealise = caObjectifGlobal > 0 ? caTotal / caObjectifGlobal : 0;
@@ -370,6 +375,9 @@ function DashboardPage() {
                   <SubDetail label="dont charges réelles" value={fmtEUR(chargesReelTotal)} />
                   <SubDetail label="dont provisions restantes" value={fmtEUR(chargesProvRestantes)} />
                   <SubDetail label="dont salaires imputés" value={fmtEUR(salairesImputes)} />
+                  {enAttenteFacturationTotal > 0 && (
+                    <SubDetail label="dont en attente de facturation" value={fmtEUR(enAttenteFacturationTotal)} />
+                  )}
                 </ul>
               </CollapsibleContent>
             </Collapsible>
@@ -389,6 +397,7 @@ function DashboardPage() {
             pipeOpt={pipeOptAudio}
             pipePon={pipePonAudio}
             pipeRetenu={pipeRetenuAudio}
+            enAttenteFacturation={enAttenteFacturationAudio}
           />
         )}
         {profil !== "audio" && (
@@ -405,6 +414,7 @@ function DashboardPage() {
             pipeOpt={pipeOptVideo}
             pipePon={pipePonVideo}
             pipeRetenu={pipeRetenuVideo}
+            enAttenteFacturation={enAttenteFacturationVideo}
           />
         )}
       </section>
@@ -658,6 +668,7 @@ function PoleCard({
   pipeOpt,
   pipePon,
   pipeRetenu,
+  enAttenteFacturation,
 }: {
   loading: boolean;
   color: string;
@@ -671,6 +682,7 @@ function PoleCard({
   pipeOpt: number;
   pipePon: number;
   pipeRetenu: number;
+  enAttenteFacturation: number;
 }) {
   const solde = ca - chargesTotal;
   return (
@@ -720,6 +732,17 @@ function PoleCard({
                 <SubDetail label="Optimiste" value={fmtEUR(pipeOpt)} />
                 <SubDetail label="Pondéré" value={fmtEUR(pipePon)} />
               </ul>
+              {enAttenteFacturation > 0 && (
+                <>
+                  <hr className="my-3 border-border" />
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Facturation en attente</span>
+                    <span className="font-medium tabular-nums" style={{ color: "#E8C547" }}>
+                      {fmtEUR(enAttenteFacturation)}
+                    </span>
+                  </div>
+                </>
+              )}
             </CollapsibleContent>
           </Collapsible>
           <div className="mt-4 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
