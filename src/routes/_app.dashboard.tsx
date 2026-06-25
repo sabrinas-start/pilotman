@@ -758,8 +758,6 @@ function PoleCard({
                     {fmtEUR(pipeRetenu)}
                   </span>
                 </li>
-                <SubDetail label="Optimiste" value={fmtEUR(pipeOpt)} />
-                <SubDetail label="Pondéré" value={fmtEUR(pipePon)} />
               </ul>
               {enAttenteFacturation > 0 && (
                 <>
