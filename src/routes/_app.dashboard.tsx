@@ -364,6 +364,32 @@ function DashboardPage() {
             </p>
             <ul className="mt-4 space-y-1.5 text-sm">
               <DetailRow label="CA réel YTD" value={fmtEUR(caTotal)} />
+            </ul>
+            <button
+              type="button"
+              onClick={() => setDetailOuvert((o) => !o)}
+              className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              {detailOuvert ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
+              Détail
+            </button>
+            {detailOuvert && (
+              <div className="mt-1.5 space-y-1 text-xs text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>dont Vente</span>
+                  <span>{fmtEUR(num(metriques.ca_vente_cumul))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>dont Assurance</span>
+                  <span>{fmtEUR(num(metriques.ca_assurance_cumul))}</span>
+                </div>
+              </div>
+            )}
+            <ul className="mt-3 space-y-1.5 text-sm">
               <DetailRow label="Charges YTD totales" value={fmtEUR(chargesTotalGlobal)} />
             </ul>
             <Collapsible>
