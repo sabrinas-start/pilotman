@@ -236,7 +236,7 @@ function SimulateurPage() {
       .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
     const chReelTotalBrut = num(metriques.charges_reel_total);
     const reelFixeNonReconciliee = chargesReelles
-      .filter((r) => r.fields.est_fixe === true && pendingProvKeys.has(str(r.fields.cle_reconciliation)))
+      .filter((r) => r.fields.est_fixe === true && !estReconciliee(r))
       .reduce((s, r) => s + num(r.fields.montant_impute_ht), 0);
     const chReelTotal = chReelTotalBrut - reelFixeNonReconciliee;
     const chCom = chReelTotal - cha - chv;
