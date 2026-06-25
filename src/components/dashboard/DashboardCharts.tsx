@@ -140,8 +140,8 @@ export function DashboardCharts({
       }
     }
 
-
     for (const r of chargesProv) {
+
       const mois = num(r.fields.mois);
       const annee = num(r.fields.annee);
       if (annee !== 2026 || mois > moisCourantIdx + 1) continue;
