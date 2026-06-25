@@ -559,6 +559,8 @@ function DashboardPage() {
             scope={graphScope}
             revenus={revenus}
             chargesReelles={chargesReelles}
+            chargesProv={chargesProv}
+            salariesMois={salariesMoisQ.data ?? []}
             objectifs={objectifs}
             pctAudio={pctAudio}
             pctVideo={pctVideo}

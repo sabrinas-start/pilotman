@@ -120,6 +120,30 @@ export function DashboardCharts({
       }
     }
 
+    for (const r of chargesProv) {
+      const mois = num(r.fields.mois);
+      const annee = num(r.fields.annee);
+      if (annee !== 2026 || mois > moisCourantIdx + 1) continue;
+      const m = mois - 1;
+      if (m < 0 || m > 11) continue;
+      const montant = num(r.fields.montant_provisionne);
+      if (scope === "Audio") chargesByMonth[m] += montant * pctAudio;
+      else if (scope === "Vidéo") chargesByMonth[m] += montant * pctVideo;
+      else chargesByMonth[m] += montant;
+    }
+
+    for (const r of salariesMois) {
+      const mois = num(r.fields.mois);
+      const annee = num(r.fields.annee);
+      if (annee !== 2026 || mois > moisCourantIdx + 1) continue;
+      const m = mois - 1;
+      if (m < 0 || m > 11) continue;
+      const montant = num(r.fields.montant_impute);
+      if (scope === "Audio") chargesByMonth[m] += montant * pctAudio;
+      else if (scope === "Vidéo") chargesByMonth[m] += montant * pctVideo;
+      else chargesByMonth[m] += montant;
+    }
+
     let cumulReel = 0;
     let cumulCharges = 0;
     const realPoints: { revenus: number; charges: number }[] = [];
@@ -159,7 +183,7 @@ export function DashboardCharts({
         soldeProj: i >= moisCourantIdx ? (i === moisCourantIdx ? cumulReel - cumulCharges : cumulRevProj - cumulChargesProj) : null,
       };
     });
-  }, [revenus, chargesReelles, scope, pctAudio, pctVideo, moisCourantIdx, objectifs]);
+  }, [revenus, chargesReelles, chargesProv, salariesMois, scope, pctAudio, pctVideo, moisCourantIdx, objectifs]);
 
   const tooltipContentStyle = {
     background: "#1f1f1f",
