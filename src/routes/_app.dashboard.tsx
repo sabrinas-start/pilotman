@@ -732,6 +732,17 @@ function PoleCard({
                 <SubDetail label="Optimiste" value={fmtEUR(pipeOpt)} />
                 <SubDetail label="Pondéré" value={fmtEUR(pipePon)} />
               </ul>
+              {enAttenteFacturation > 0 && (
+                <>
+                  <hr className="my-3 border-border" />
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Facturation en attente</span>
+                    <span className="font-medium tabular-nums" style={{ color: "#E8C547" }}>
+                      {fmtEUR(enAttenteFacturation)}
+                    </span>
+                  </div>
+                </>
+              )}
             </CollapsibleContent>
           </Collapsible>
           <div className="mt-4 rounded-md border border-border/60 bg-muted/30 px-3 py-2">
