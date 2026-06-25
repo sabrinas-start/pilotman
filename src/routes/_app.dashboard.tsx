@@ -375,6 +375,9 @@ function DashboardPage() {
                   <SubDetail label="dont charges réelles" value={fmtEUR(chargesReelTotal)} />
                   <SubDetail label="dont provisions restantes" value={fmtEUR(chargesProvRestantes)} />
                   <SubDetail label="dont salaires imputés" value={fmtEUR(salairesImputes)} />
+                  {enAttenteFacturationTotal > 0 && (
+                    <SubDetail label="dont en attente de facturation" value={fmtEUR(enAttenteFacturationTotal)} />
+                  )}
                 </ul>
               </CollapsibleContent>
             </Collapsible>
