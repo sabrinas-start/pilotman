@@ -43,6 +43,7 @@ function DashboardPage() {
   const [graphScope, setGraphScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
   const [capaciteScope, setCapaciteScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
   const [projectionScope, setProjectionScope] = useState<"Global" | "Audio" | "Vidéo">("Global");
+  const [detailOuvert, setDetailOuvert] = useState(false);
 
   const metriquesQ = useAirtable("tblNznOYtuFDUI3df", {
     maxRecords: 1,
