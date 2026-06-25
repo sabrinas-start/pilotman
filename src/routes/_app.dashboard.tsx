@@ -668,6 +668,7 @@ function PoleCard({
   pipeOpt,
   pipePon,
   pipeRetenu,
+  enAttenteFacturation,
 }: {
   loading: boolean;
   color: string;
