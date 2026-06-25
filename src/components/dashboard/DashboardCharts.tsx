@@ -159,8 +159,32 @@ export function DashboardCharts({
       scope === "Audio" ? num(objectifs.ca_objectif_audio)
       : scope === "Vidéo" ? num(objectifs.ca_objectif_video)
       : annuel;
-    const moisEcoules = moisCourantIdx + 1;
-    const chargesParMoisMoyen = moisEcoules > 0 ? cumulCharges / moisEcoules : 0;
+
+    const chargesFuturesByMonth = new Array(12).fill(0) as number[];
+
+    for (const r of chargesProv) {
+      const mois = num(r.fields.mois);
+      const annee = num(r.fields.annee);
+      if (annee !== 2026 || mois <= moisCourantIdx + 1) continue;
+      const m = mois - 1;
+      if (m < 0 || m > 11) continue;
+      const montant = num(r.fields.montant_provisionne);
+      if (scope === "Audio") chargesFuturesByMonth[m] += montant * pctAudio;
+      else if (scope === "Vidéo") chargesFuturesByMonth[m] += montant * pctVideo;
+      else chargesFuturesByMonth[m] += montant;
+    }
+
+    for (const r of salariesMois) {
+      const mois = num(r.fields.mois);
+      const annee = num(r.fields.annee);
+      if (annee !== 2026 || mois <= moisCourantIdx + 1) continue;
+      const m = mois - 1;
+      if (m < 0 || m > 11) continue;
+      const montant = num(r.fields.montant_impute);
+      if (scope === "Audio") chargesFuturesByMonth[m] += montant * pctAudio;
+      else if (scope === "Vidéo") chargesFuturesByMonth[m] += montant * pctVideo;
+      else chargesFuturesByMonth[m] += montant;
+    }
 
     let cumulRevProj = cumulReel;
     let cumulChargesProj = cumulCharges;
@@ -170,7 +194,7 @@ export function DashboardCharts({
       const part = num(objectifs[saisonKey]);
       if (i > moisCourantIdx) {
         cumulRevProj += objScope * part;
-        cumulChargesProj += chargesParMoisMoyen;
+        cumulChargesProj += chargesFuturesByMonth[i];
       }
       const real = i <= moisCourantIdx ? realPoints[i] : null;
       return {
