@@ -676,6 +676,7 @@ function PoleCard({
   pipeOpt: number;
   pipePon: number;
   pipeRetenu: number;
+  enAttenteFacturation: number;
 }) {
   const solde = ca - chargesTotal;
   return (
