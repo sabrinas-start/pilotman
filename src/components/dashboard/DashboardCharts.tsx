@@ -33,6 +33,8 @@ interface Props {
   scope: "Global" | "Audio" | "Vidéo";
   revenus: AirtableRecord[];
   chargesReelles: AirtableRecord[];
+  chargesProv: AirtableRecord[];
+  salariesMois: AirtableRecord[];
   objectifs: Record<string, unknown>;
   pctAudio: number;
   pctVideo: number;
@@ -43,6 +45,8 @@ export function DashboardCharts({
   scope,
   revenus,
   chargesReelles,
+  chargesProv,
+  salariesMois,
   objectifs,
   pctAudio,
   pctVideo,
