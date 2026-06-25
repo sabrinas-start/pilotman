@@ -394,6 +394,7 @@ function DashboardPage() {
             pipeOpt={pipeOptAudio}
             pipePon={pipePonAudio}
             pipeRetenu={pipeRetenuAudio}
+            enAttenteFacturation={enAttenteFacturationAudio}
           />
         )}
         {profil !== "audio" && (
@@ -410,6 +411,7 @@ function DashboardPage() {
             pipeOpt={pipeOptVideo}
             pipePon={pipePonVideo}
             pipeRetenu={pipeRetenuVideo}
+            enAttenteFacturation={enAttenteFacturationVideo}
           />
         )}
       </section>
