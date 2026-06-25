@@ -29,6 +29,15 @@ const fmtEUR = (n: number) =>
 const num = (v: unknown): number => (typeof v === "number" ? v : 0);
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
+function cleReelle(r: AirtableRecord): string {
+  const typeCharge = str(r.fields.type_charge);
+  const categorie = str(r.fields.categorie);
+  if (typeCharge === "Assurance") return categorie || typeCharge;
+  if (typeCharge === "Frais locaux" && categorie === "Autres") return "Autres";
+  return typeCharge;
+}
+
+
 interface Props {
   scope: "Global" | "Audio" | "Vidéo";
   revenus: AirtableRecord[];
