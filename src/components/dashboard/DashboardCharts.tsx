@@ -108,7 +108,19 @@ export function DashboardCharts({
       else reelByMonth[m] += num(r.fields.ca_montant_ht);
     }
 
+    const pendingProvKeys = new Set(
+      chargesProv.map((r) => str(r.fields.cle_reconciliation)).filter(Boolean),
+    );
+    const estReconciliee = (r: AirtableRecord) => {
+      if (r.fields.est_fixe !== true) return true;
+      const cle = cleReelle(r);
+      const mois = num(r.fields.mois);
+      const annee = num(r.fields.annee);
+      return !pendingProvKeys.has(`${cle}_${mois}_${annee}`) && !pendingProvKeys.has(`${cle}_${annee}`);
+    };
+
     for (const r of chargesReelles) {
+      if (!estReconciliee(r)) continue;
       const mois = num(r.fields.mois);
       const annee = num(r.fields.annee);
       if (annee !== 2026) continue;
@@ -128,6 +140,7 @@ export function DashboardCharts({
         chargesByMonth[m] += montant;
       }
     }
+
 
     for (const r of chargesProv) {
       const mois = num(r.fields.mois);
